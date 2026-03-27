@@ -4777,6 +4777,7 @@ function tryLogin(){
   const dash=document.getElementById('page-dashboard');
   if(dash){ dash.classList.add('active'); }
   renderDashboard();
+  setTimeout(function(){_startSync();},300);
   // تحديث ROLE_PAGES ليشمل الصفحات الجديدة
   const dbUser2=(DB.users||[]).find(u=>u.login===currentUser.username);
   const role2=dbUser2?dbUser2.role:'مدير';
@@ -7220,12 +7221,29 @@ function _doPull(){
   }).catch(function(){_sb('🔴 لا إنترنت','#ff4d6d');});
 }
 function _startSync(){_doSync();if(_sT)clearInterval(_sT);_sT=setInterval(_doPull,5000);}
-(function(){
-  var oS=saveDB;saveDB=function(){oS();_doSync();};
-  var oL=tryLogin;tryLogin=function(){oL.apply(this,arguments);setTimeout(_startSync,500);};
-})();
-window.addEventListener('online',function(){_startSync();try{toast('📶 تمت المزامنة','green');}catch(e){}});
-window.addEventListener('offline',function(){_sb('🔴 لا إنترنت','#ff4d6d');});
+
+// patch saveDB لتشمل المزامنة
+window.addEventListener('load', function(){
+  var _oSave = window.saveDB;
+  if(_oSave && !_oSave._patched){
+    window.saveDB = function(){
+      _oSave();
+      if(typeof _doSync === 'function') _doSync();
+    };
+    window.saveDB._patched = true;
+  }
+  // إذا كان المستخدم مسجلاً
+  if(typeof currentUser !== 'undefined' && currentUser){
+    setTimeout(_startSync, 500);
+  }
+});
+window.addEventListener('online', function(){
+  if(typeof _startSync==='function') _startSync();
+  try{toast('📶 تمت المزامنة','green');}catch(e){}
+});
+window.addEventListener('offline', function(){
+  if(typeof _sb==='function') _sb('🔴 لا إنترنت','#ff4d6d');
+});
 
 </script>
 
