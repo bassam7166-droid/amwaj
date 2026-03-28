@@ -531,9 +531,8 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
-<span id="_SB" onclick="_doSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">💾 محلي</span>
+<span id="_SB" onclick="_doSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;user-select:none;">💾 محلي</span>
       <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
-      
       <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
@@ -2821,7 +2820,6 @@ function saveSupReceipt(){
   pushLedger(sup.id,'دفعة',desc,0,amt);
   syncBalance(sup.id);
   document.getElementById('supReceiptForm').classList.remove('open');
-  saveDB();
   renderPage('supDebts');
 }
 
@@ -2837,7 +2835,6 @@ function addSupplier(){
   if(debt>0){pushLedger(sup.id,'دين','رصيد مبدئي',debt,0);syncBalance(sup.id);}
   ['sup_name','sup_phone','sup_city'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sup_debt').value=0;
-  saveDB();
   toggleForm('supForm'); renderPage('suppliers');
 }
 function addCustomer(){
@@ -2849,7 +2846,6 @@ function addCustomer(){
   if(debt>0){pushLedger(cust.id,'دين','رصيد مبدئي',debt,0);syncBalance(cust.id);}
   ['cust_name','cust_phone','cust_city'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cust_debt').value=0;
-  saveDB();
   toggleForm('custForm'); renderPage('customers');
 }
 function addInventory(){
@@ -2889,7 +2885,6 @@ function addReturn(){
   }
   DB.returns.unshift({id:Date.now(),date:nowISO(),type:retType,party:document.getElementById('ret_party').value.trim()||'—',category:document.getElementById('ret_cat').value.trim()||'—',item:itemName,qty,amount,reason:document.getElementById('ret_reason').value.trim()||'—',invUpdated:!!inv});
   checkLowStockAlerts();
-  saveDB();
   toggleForm('retForm'); renderPage('returns');
 }
 
@@ -2932,9 +2927,7 @@ function renderModalContent(){
   const receipts=L.filter(x=>x.credit>0);
   document.getElementById('modalReceipts').innerHTML=receipts.length?`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الرصيد بعد الدفع</th></tr></thead><tbody>${receipts.map(e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td style="color:var(--green);font-weight:700">${fmt(e.credit)} ${CUR}</td><td style="color:var(--yellow)">${fmt(e.balance)} ${CUR}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">لا توجد إيصالات</div>';
 }
-  saveDB();
 function addDebtEntry(){toggleForm('debtEntryForm');}
-  saveDB();
 function addReceiptEntry(){toggleForm('receiptEntryForm');}
 function saveDebtEntry(){
   const desc=document.getElementById('de_desc').value.trim()||'دين جديد', amt=+document.getElementById('de_amt').value||0;
@@ -2942,7 +2935,6 @@ function saveDebtEntry(){
   pushLedger(activeAccId,'دين',desc,amt,0); syncBalance(activeAccId);
   document.getElementById('de_desc').value=''; document.getElementById('de_amt').value=0;
   document.getElementById('debtEntryForm').classList.remove('open');
-  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function saveReceiptEntry(){
@@ -2953,7 +2945,6 @@ function saveReceiptEntry(){
   pushLedger(activeAccId,'دفعة',desc,0,amt); syncBalance(activeAccId);
   document.getElementById('re_desc').value=''; document.getElementById('re_amt').value=0;
   document.getElementById('receiptEntryForm').classList.remove('open');
-  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function settleDebt(id,type){
@@ -4206,7 +4197,7 @@ function renderReports(){
 const SAVE_KEY='amwaj_db_v3';
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
-  if(typeof _doSync==='function') _doSync();
+  if(typeof _doSync==='function')_doSync();
 }
 function loadDB(){
   try{
@@ -4390,7 +4381,6 @@ function addUser(){
   if(DB.users.find(u=>u.login===login)){toast('⚠ اسم الدخول مستخدم مسبقاً','yellow');return;}
   DB.users.push({id:Date.now(),name,login,pass,role,active:true,created:todayISO()});
   ['u_name','u_login','u_pass'].forEach(id=>document.getElementById(id).value='');
-  saveDB();
   toggleForm('addUserForm');
   renderUsersTable(); renderChangePassUser();
   toast('✅ تمت إضافة المستخدم بنجاح','green');
@@ -4778,7 +4768,7 @@ function tryLogin(){
   const dash=document.getElementById('page-dashboard');
   if(dash){ dash.classList.add('active'); }
   renderDashboard();
-  setTimeout(_startSync, 400);
+  setTimeout(function(){if(typeof _startSync==='function')_startSync();},300);
   // تحديث ROLE_PAGES ليشمل الصفحات الجديدة
   const dbUser2=(DB.users||[]).find(u=>u.login===currentUser.username);
   const role2=dbUser2?dbUser2.role:'مدير';
@@ -7192,63 +7182,86 @@ function updateHeaderButtons(){
 }
 
 
-var _sT=null,_sH='';
-var _DB_URL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
-function _sb(s,c){var e=document.getElementById('_SB');if(!e)return;e.textContent=s;e.style.color=c;}
+// ════════════════════════════════════════
+// مزامنة Firebase REST — تعمل بدون SDK
+// ════════════════════════════════════════
+var _sT=null, _sH='';
+var _sURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
+
+function _sb(s,c){
+  var e=document.getElementById('_SB');
+  if(!e)return;
+  e.textContent=s;
+  e.style.color=c||'#ffc23e';
+}
+
 function _doSync(){
   if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
   _sb('⬆ رفع...','#00c8ff');
-  fetch(_DB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
-  .then(function(r){_sb(r.ok?'🟢 مباشر':'🔴 خطأ',r.ok?'#00e5a0':'#ff4d6d');})
-  .catch(function(){_sb('🔴 لا إنترنت','#ff4d6d');});
-}
-function _doPull(){
-  if(!navigator.onLine)return;
-  fetch(_DB_URL).then(function(r){return r.json();}).then(function(d){
-    if(!d){_sb('🟢 مباشر','#00e5a0');return;}
-    var h=JSON.stringify(d);
-    if(h===_sH){_sb('🟢 مباشر','#00e5a0');return;}
-    _sH=h;
-    var c=false;
-    ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-     'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
-      if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){DB[k]=d[k];c=true;}
+  try{
+    fetch(_sURL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(DB)
+    })
+    .then(function(r){
+      if(r.ok){_sb('🟢 مباشر','#00e5a0');}
+      else{_sb('🔴 خطأ '+r.status,'#ff4d6d');}
+    })
+    .catch(function(e){
+      console.error('sync push error:',e);
+      _sb('🔴 خطأ','#ff4d6d');
     });
-    if(c){
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-    }
-    _sb('🟢 مباشر','#00e5a0');
-  }).catch(function(){_sb('🔴 لا إنترنت','#ff4d6d');});
+  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
 }
-function _startSync(){_doSync();if(_sT)clearInterval(_sT);_sT=setInterval(_doPull,5000);}
 
-// patch saveDB لتشمل المزامنة
-window.addEventListener('load', function(){
-  var _oSave = window.saveDB;
-  if(_oSave && !_oSave._patched){
-    window.saveDB = function(){
-      _oSave();
-      if(typeof _doSync === 'function') _doSync();
-    };
-    window.saveDB._patched = true;
-  }
-  // إذا كان المستخدم مسجلاً
-  if(typeof currentUser !== 'undefined' && currentUser){
-    setTimeout(_startSync, 500);
-  }
-});
-window.addEventListener('online', function(){
-  if(typeof _startSync==='function') _startSync();
+function _doPull(){
+  if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
+  try{
+    fetch(_sURL)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d){_sb('🟢 مباشر','#00e5a0');return;}
+      var h=JSON.stringify(d);
+      if(h===_sH){_sb('🟢 مباشر','#00e5a0');return;}
+      _sH=h;
+      var changed=false;
+      ['sales','purchases','suppliers','customers','inventory','returns','invoices',
+       'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
+        if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){
+          DB[k]=d[k];changed=true;
+        }
+      });
+      if(changed){
+        try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+        try{
+          var p=document.querySelector('.page.active');
+          if(p)renderPage(p.id.replace('page-',''));
+        }catch(e){}
+      }
+      _sb('🟢 مباشر','#00e5a0');
+    })
+    .catch(function(e){
+      console.error('sync pull error:',e);
+      _sb('🔴 لا إنترنت','#ff4d6d');
+    });
+  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
+}
+
+function _startSync(){
+  _doSync();
+  if(_sT)clearInterval(_sT);
+  _sT=setInterval(_doPull,5000);
+}
+
+
+window.addEventListener('online',function(){
+  if(typeof _startSync==='function')_startSync();
   try{toast('📶 تمت المزامنة','green');}catch(e){}
 });
-window.addEventListener('offline', function(){
-  if(typeof _sb==='function') _sb('🔴 لا إنترنت','#ff4d6d');
+window.addEventListener('offline',function(){
+  if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
 });
-
-
-window.addEventListener('online',function(){_startSync();try{toast('📶 تمت المزامنة','green');}catch(e){}});
-window.addEventListener('offline',function(){_sb('🔴 لا إنترنت','#ff4d6d');});
 
 </script>
 
