@@ -4724,6 +4724,87 @@ const USERS=[
 ];
 let currentUser=null;
 
+// ════════════════════════════════════════
+// مزامنة Firebase REST — تعمل بدون SDK
+// ════════════════════════════════════════
+var _sT=null, _sH='';
+var _sURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
+
+function _sb(s,c){
+  var e=document.getElementById('_SB');
+  if(!e)return;
+  e.textContent=s;
+  e.style.color=c||'#ffc23e';
+}
+
+function _doSync(){
+  if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
+  _sb('⬆ رفع...','#00c8ff');
+  try{
+    fetch(_sURL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(DB)
+    })
+    .then(function(r){
+      if(r.ok){_sb('🟢 مباشر','#00e5a0');}
+      else{_sb('🔴 خطأ '+r.status,'#ff4d6d');}
+    })
+    .catch(function(e){
+      console.error('sync push error:',e);
+      _sb('🔴 خطأ','#ff4d6d');
+    });
+  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
+}
+
+function _doPull(){
+  if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
+  try{
+    fetch(_sURL)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d){_sb('🟢 مباشر','#00e5a0');return;}
+      var h=JSON.stringify(d);
+      if(h===_sH){_sb('🟢 مباشر','#00e5a0');return;}
+      _sH=h;
+      var changed=false;
+      ['sales','purchases','suppliers','customers','inventory','returns','invoices',
+       'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
+        if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){
+          DB[k]=d[k];changed=true;
+        }
+      });
+      if(changed){
+        try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+        try{
+          var p=document.querySelector('.page.active');
+          if(p)renderPage(p.id.replace('page-',''));
+        }catch(e){}
+      }
+      _sb('🟢 مباشر','#00e5a0');
+    })
+    .catch(function(e){
+      console.error('sync pull error:',e);
+      _sb('🔴 لا إنترنت','#ff4d6d');
+    });
+  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
+}
+
+function _startSync(){
+  _doSync();
+  if(_sT)clearInterval(_sT);
+  _sT=setInterval(_doPull,5000);
+}
+
+
+window.addEventListener('online',function(){
+  if(typeof _startSync==='function')_startSync();
+  try{toast('📶 تمت المزامنة','green');}catch(e){}
+});
+window.addEventListener('offline',function(){
+  if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
+});
+
 function tryLogin(){
   const u=document.getElementById('li_user').value.trim();
   const p=document.getElementById('li_pass').value.trim();
@@ -7182,86 +7263,6 @@ function updateHeaderButtons(){
 }
 
 
-// ════════════════════════════════════════
-// مزامنة Firebase REST — تعمل بدون SDK
-// ════════════════════════════════════════
-var _sT=null, _sH='';
-var _sURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
-
-function _sb(s,c){
-  var e=document.getElementById('_SB');
-  if(!e)return;
-  e.textContent=s;
-  e.style.color=c||'#ffc23e';
-}
-
-function _doSync(){
-  if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
-  _sb('⬆ رفع...','#00c8ff');
-  try{
-    fetch(_sURL,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(DB)
-    })
-    .then(function(r){
-      if(r.ok){_sb('🟢 مباشر','#00e5a0');}
-      else{_sb('🔴 خطأ '+r.status,'#ff4d6d');}
-    })
-    .catch(function(e){
-      console.error('sync push error:',e);
-      _sb('🔴 خطأ','#ff4d6d');
-    });
-  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
-}
-
-function _doPull(){
-  if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
-  try{
-    fetch(_sURL)
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(!d){_sb('🟢 مباشر','#00e5a0');return;}
-      var h=JSON.stringify(d);
-      if(h===_sH){_sb('🟢 مباشر','#00e5a0');return;}
-      _sH=h;
-      var changed=false;
-      ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-       'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
-        if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){
-          DB[k]=d[k];changed=true;
-        }
-      });
-      if(changed){
-        try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-        try{
-          var p=document.querySelector('.page.active');
-          if(p)renderPage(p.id.replace('page-',''));
-        }catch(e){}
-      }
-      _sb('🟢 مباشر','#00e5a0');
-    })
-    .catch(function(e){
-      console.error('sync pull error:',e);
-      _sb('🔴 لا إنترنت','#ff4d6d');
-    });
-  }catch(e){_sb('🔴 خطأ','#ff4d6d');}
-}
-
-function _startSync(){
-  _doSync();
-  if(_sT)clearInterval(_sT);
-  _sT=setInterval(_doPull,5000);
-}
-
-
-window.addEventListener('online',function(){
-  if(typeof _startSync==='function')_startSync();
-  try{toast('📶 تمت المزامنة','green');}catch(e){}
-});
-window.addEventListener('offline',function(){
-  if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
-});
 
 </script>
 
