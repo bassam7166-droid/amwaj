@@ -4206,6 +4206,7 @@ function renderReports(){
 const SAVE_KEY='amwaj_db_v3';
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
+  if(typeof _doSync==='function') _doSync();
 }
 function loadDB(){
   try{
@@ -4777,7 +4778,7 @@ function tryLogin(){
   const dash=document.getElementById('page-dashboard');
   if(dash){ dash.classList.add('active'); }
   renderDashboard();
-  setTimeout(function(){_startSync();},300);
+  setTimeout(_startSync, 400);
   // تحديث ROLE_PAGES ليشمل الصفحات الجديدة
   const dbUser2=(DB.users||[]).find(u=>u.login===currentUser.username);
   const role2=dbUser2?dbUser2.role:'مدير';
@@ -7244,6 +7245,10 @@ window.addEventListener('online', function(){
 window.addEventListener('offline', function(){
   if(typeof _sb==='function') _sb('🔴 لا إنترنت','#ff4d6d');
 });
+
+
+window.addEventListener('online',function(){_startSync();try{toast('📶 تمت المزامنة','green');}catch(e){}});
+window.addEventListener('offline',function(){_sb('🔴 لا إنترنت','#ff4d6d');});
 
 </script>
 
