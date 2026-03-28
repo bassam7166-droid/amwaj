@@ -4779,6 +4779,10 @@ function _doPull(){
         try{
           var p=document.querySelector('.page.active');
           if(p)renderPage(p.id.replace('page-',''));
+          // تحديث الداشبورد
+          try{if(typeof renderDashboard==='function')renderDashboard();}catch(e){}
+          // إشعار بالتحديث
+          try{toast('🔄 تم استلام بيانات جديدة','green');}catch(e){}
         }catch(e){}
       }
       _sb('🟢 مباشر','#00e5a0');
@@ -4793,7 +4797,7 @@ function _doPull(){
 function _startSync(){
   _doSync();
   if(_sT)clearInterval(_sT);
-  _sT=setInterval(_doPull,5000);
+  _sT=setInterval(_doPull,3000);
 }
 
 
