@@ -531,8 +531,8 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
-<span id="_SB" onclick="_doSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;user-select:none;">💾 محلي</span>
-      <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
+<span id="_SB" onclick="amwajSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">💾 محلي</span>
+<button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
       <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
@@ -2835,7 +2835,6 @@ function addSupplier(){
   if(debt>0){pushLedger(sup.id,'دين','رصيد مبدئي',debt,0);syncBalance(sup.id);}
   ['sup_name','sup_phone','sup_city'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sup_debt').value=0;
-  saveDB();
   toggleForm('supForm'); renderPage('suppliers');
 }
 function addCustomer(){
@@ -2887,7 +2886,6 @@ function addReturn(){
   }
   DB.returns.unshift({id:Date.now(),date:nowISO(),type:retType,party:document.getElementById('ret_party').value.trim()||'—',category:document.getElementById('ret_cat').value.trim()||'—',item:itemName,qty,amount,reason:document.getElementById('ret_reason').value.trim()||'—',invUpdated:!!inv});
   checkLowStockAlerts();
-  saveDB();
   toggleForm('retForm'); renderPage('returns');
 }
 
@@ -2930,9 +2928,7 @@ function renderModalContent(){
   const receipts=L.filter(x=>x.credit>0);
   document.getElementById('modalReceipts').innerHTML=receipts.length?`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الرصيد بعد الدفع</th></tr></thead><tbody>${receipts.map(e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td style="color:var(--green);font-weight:700">${fmt(e.credit)} ${CUR}</td><td style="color:var(--yellow)">${fmt(e.balance)} ${CUR}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">لا توجد إيصالات</div>';
 }
-  saveDB();
 function addDebtEntry(){toggleForm('debtEntryForm');}
-  saveDB();
 function addReceiptEntry(){toggleForm('receiptEntryForm');}
 function saveDebtEntry(){
   const desc=document.getElementById('de_desc').value.trim()||'دين جديد', amt=+document.getElementById('de_amt').value||0;
@@ -2940,7 +2936,6 @@ function saveDebtEntry(){
   pushLedger(activeAccId,'دين',desc,amt,0); syncBalance(activeAccId);
   document.getElementById('de_desc').value=''; document.getElementById('de_amt').value=0;
   document.getElementById('debtEntryForm').classList.remove('open');
-  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function saveReceiptEntry(){
@@ -2951,7 +2946,6 @@ function saveReceiptEntry(){
   pushLedger(activeAccId,'دفعة',desc,0,amt); syncBalance(activeAccId);
   document.getElementById('re_desc').value=''; document.getElementById('re_amt').value=0;
   document.getElementById('receiptEntryForm').classList.remove('open');
-  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function settleDebt(id,type){
@@ -4204,7 +4198,59 @@ function renderReports(){
 const SAVE_KEY='amwaj_db_v3';
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
-  if(typeof _doSync==='function')_doSync();
+  // رفع Firebase
+  amwajPush();
+}
+
+var _amwajURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
+var _amwajT=null;
+var _amwajH='';
+
+function _amwajSB(s,c){var e=document.getElementById('_SB');if(!e)return;e.textContent=s;e.style.color=c||'#ffc23e';}
+
+function amwajPush(){
+  if(!navigator.onLine){_amwajSB('🔴 لا إنترنت','#ff4d6d');return;}
+  _amwajSB('⬆ رفع...','#00c8ff');
+  fetch(_amwajURL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
+  .then(function(r){_amwajSB(r.ok?'🟢 مباشر':'🔴 خطأ '+r.status,r.ok?'#00e5a0':'#ff4d6d');})
+  .catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
+}
+
+function amwajPull(){
+  if(!navigator.onLine)return;
+  fetch(_amwajURL)
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
+    var h=JSON.stringify(d);
+    if(h===_amwajH){_amwajSB('🟢 مباشر','#00e5a0');return;}
+    _amwajH=h;
+    var changed=false;
+    ['sales','purchases','suppliers','customers','inventory','returns','invoices',
+     'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
+      if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){DB[k]=d[k];changed=true;}
+    });
+    if(changed){
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+      // تحديث USERS
+      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){var m=USERS.find(function(x){return x.username===u.login;});if(m){m.password=u.pass;m.role=u.role;}else{USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});}});}}catch(e){}
+      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+      try{if(typeof renderDashboard==='function'&&document.getElementById('page-dashboard')&&document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();}catch(e){}
+      _amwajSB('🟢 مباشر','#00e5a0');
+    } else {_amwajSB('🟢 مباشر','#00e5a0');}
+  })
+  .catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
+}
+
+function amwajSync(){
+  amwajPush();
+  amwajPull();
+}
+
+function amwajStart(){
+  amwajPush();
+  if(_amwajT)clearInterval(_amwajT);
+  _amwajT=setInterval(amwajPull,3000);
 }
 function loadDB(){
   try{
@@ -4388,7 +4434,6 @@ function addUser(){
   if(DB.users.find(u=>u.login===login)){toast('⚠ اسم الدخول مستخدم مسبقاً','yellow');return;}
   DB.users.push({id:Date.now(),name,login,pass,role,active:true,created:todayISO()});
   ['u_name','u_login','u_pass'].forEach(id=>document.getElementById(id).value='');
-  saveDB();
   toggleForm('addUserForm');
   renderUsersTable(); renderChangePassUser();
   toast('✅ تمت إضافة المستخدم بنجاح','green');
@@ -4654,7 +4699,6 @@ function saveBizConfig(){
   DB.config.phone=document.getElementById('cfg_phone').value.trim();
   DB.config.address=document.getElementById('cfg_addr').value.trim();
   DB.config.currency=document.getElementById('cfg_cur').value;
-  saveDB();
   toast('✅ تم حفظ بيانات المنشأة','green');
 }
 
@@ -4777,7 +4821,7 @@ function tryLogin(){
   const dash=document.getElementById('page-dashboard');
   if(dash){ dash.classList.add('active'); }
   renderDashboard();
-  setTimeout(function(){if(typeof _startSync==='function')_startSync();},300);
+  amwajStart();
   // تحديث ROLE_PAGES ليشمل الصفحات الجديدة
   const dbUser2=(DB.users||[]).find(u=>u.login===currentUser.username);
   const role2=dbUser2?dbUser2.role:'مدير';
@@ -7272,6 +7316,9 @@ window.addEventListener('offline',function(){
   if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
 });
 
+
+window.addEventListener('online',function(){amwajStart();try{toast('📶 تمت المزامنة','green');}catch(e){}});
+window.addEventListener('offline',function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
 </script>
 
 <!-- ══ مودال تغيير كلمة المرور ══ -->
