@@ -1,8 +1,11 @@
 {
   "name": "مركز أمواج الخليج للإلكترونيات",
   "short_name": "أمواج الخليج",
+  "description": "نظام إدارة المبيعات والمخزون",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#07090f",
   "theme_color": "#07090f",
   "lang": "ar",
