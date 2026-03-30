@@ -531,9 +531,9 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
-<span id="_SB" onclick="amwajSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">💾 محلي</span>
+<span id="_SB" onclick="forceSync()" title="اضغط لجلب آخر البيانات" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">⬇ جلب</span>
 <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
-      <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
+      <button onclick="amwajManualPush()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ رفع</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
       <span class="date-chip" id="dateChip"></span>
@@ -4340,8 +4340,8 @@ function renderReports(){
 const SAVE_KEY='amwaj_db_v3';
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
-  // رفع Firebase
-  amwajPush();
+  // Firebase SDK يتولى الرفع عبر patchSaveDB — لا نستدعي amwajPush هنا
+  // (patchSaveDB تستبدل هذه الدالة عند تسجيل الدخول)
 }
 
 var _amwajURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
@@ -4351,6 +4351,8 @@ var _amwajH='';
 function _amwajSB(s,c){var e=document.getElementById('_SB');if(!e)return;e.textContent=s;e.style.color=c||'#ffc23e';}
 
 function amwajPush(){
+  // إذا Firebase SDK متاح، يتولى هو المزامنة — لا نستخدم REST
+  if(window._fbOK && window._fbRef){ _amwajSB('🟢 مباشر','#00e5a0'); return; }
   if(!navigator.onLine){_amwajSB('🔴 لا إنترنت','#ff4d6d');return;}
   _amwajSB('⬆ رفع...','#00c8ff');
   fetch(_amwajURL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
@@ -4359,6 +4361,11 @@ function amwajPush(){
 }
 
 function amwajPull(){
+  // polling خفيف — Firebase SDK يتولى التحديث الفوري
+  if(window._fbOK && window._fbRef){
+    // Firebase SDK listener يعمل تلقائياً — لا نتدخل
+    return;
+  }
   if(!navigator.onLine)return;
   fetch(_amwajURL)
   .then(function(r){return r.json();})
@@ -4385,13 +4392,68 @@ function amwajPull(){
   .catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
 }
 
-function amwajSync(){
-  amwajPush();
-  amwajPull();
+function forceSync(){ amwajForcePull(); }
+function amwajSync(){ amwajForcePull(); }
+function amwajForcePull(){
+  // جلب البيانات من Firebase فوراً بغض النظر عن الـ hash
+  _amwajH = '';
+  if(window._fbOK && window._fbRef){
+    _amwajSB('⇪ جلب...','#00c8ff');
+    window._fbRef.once('value').then(function(snap){
+      var d = snap.val();
+      if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
+      var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices',
+        'ledger','users','config','keys','salesDeductions','balanceRecords',
+        'stockLedger','withdrawals','employees','rentItems','expHistory'];
+      keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){var m=USERS.find(function(x){return x.username===u.login;});if(m){m.password=u.pass;m.role=u.role;}else{USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});}});}}catch(e){}
+      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+      try{if(typeof renderDashboard==='function'){var dash=document.getElementById('page-dashboard');if(dash&&dash.classList.contains('active'))renderDashboard();}}catch(e){}
+      _amwajSB('🟢 مباشر','#00e5a0');
+    }).catch(function(){_amwajSB('🔴 خطأ','#ff4d6d');});
+  } else {
+    // Fallback REST
+    if(!navigator.onLine){_amwajSB('🔴 لا إنترنت','#ff4d6d');return;}
+    _amwajSB('⇪ جلب...','#00c8ff');
+    fetch(_amwajURL)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
+      var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices',
+        'ledger','users','config','keys','salesDeductions'];
+      keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
+      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+      _amwajSB('🟢 مباشر','#00e5a0');
+    }).catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
+  }
+}
+
+function amwajManualPush(){
+  // رفع يدوي صريح — فقط عند طلب المستخدم
+  if(!navigator.onLine){toast('🔴 لا يوجد اتصال بالإنترنت','red');return;}
+  if(window._fbOK && window._fbRef){
+    _amwajSB('⬆ رفع...','#00c8ff');
+    var snapshot=JSON.parse(JSON.stringify(DB));
+    window._fbRef.set(snapshot)
+    .then(function(){
+      _amwajSB('🟢 مباشر','#00e5a0');
+      toast('✅ تم رفع البيانات بنجاح','green');
+    })
+    .catch(function(){_amwajSB('🔴 فشل','#ff4d6d');toast('خطأ في الرفع','red');});
+  } else {
+    fetch(_amwajURL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
+    .then(function(r){
+      if(r.ok){_amwajSB('🟢 مباشر','#00e5a0');toast('✅ تم الرفع','green');}
+      else{_amwajSB('🔴 خطأ','#ff4d6d');}
+    }).catch(function(){_amwajSB('🔴 خطأ','#ff4d6d');});
+  }
 }
 
 function amwajStart(){
-  amwajPush();
+  // عند البداية: اجلب أولاً ثم ابدأ polling — لا ترفع
+  amwajForcePull();
   if(_amwajT)clearInterval(_amwajT);
   _amwajT=setInterval(amwajPull,800);
 }
@@ -5238,6 +5300,16 @@ var _fbDB  = null;
 var _fbRef = null;
 var _fbOK  = false;
 var _fbIgnoreNext = false;
+// معرف فريد لكل جهاز
+if(!window._deviceId){
+  try{
+    window._deviceId = localStorage.getItem('_amwaj_device_id');
+    if(!window._deviceId){
+      window._deviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+      localStorage.setItem('_amwaj_device_id', window._deviceId);
+    }
+  }catch(e){ window._deviceId = 'dev_' + Date.now(); }
+}
 
 function fbInit(){
   try{
@@ -5251,23 +5323,51 @@ function fbInit(){
     _fbRef = _fbDB.ref('amwaj_db');
     _fbOK  = true;
 
-    // استمع للتغييرات الفورية
+    // ═══ Listener الرئيسي — يستقبل كل تغيير من أي جهاز ═══
     _fbRef.on('value', function(snap){
-      // تجاهل تام أثناء الحفظ أو خلال فترة الحماية
-      if(_fbSaving) return;
-      if(_fbIgnoreNext){ _fbIgnoreNext=false; return; }
-      if(Date.now() < _fbIgnoreUntil) return;
       var d = snap.val();
       if(!d) return;
-      var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices','ledger','users','config','keys'];
-      keys.forEach(function(k){ if(d[k]!==undefined) DB[k]=d[k]; });
+
+      // إذا كنا نحفظ الآن وهذه البيانات من جهازنا — تجاهل
+      if(_fbSaving && d._lastDevice === (window._deviceId||'unknown')) return;
+
+      var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices',
+        'ledger','users','config','keys','salesDeductions','balanceRecords',
+        'stockLedger','withdrawals','employees','rentItems','expHistory'];
+      var changed = false;
+      keys.forEach(function(k){
+        if(d[k]!==undefined && JSON.stringify(d[k])!==JSON.stringify(DB[k])){
+          DB[k]=d[k]; changed=true;
+        }
+      });
+
+      // حفظ محلي
       try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-      // تحديث الواجهة
-      try{
-        var page = document.querySelector('.page.active');
-        if(page) renderPage(page.id.replace('page-',''));
-      }catch(e){}
+
+      // تحديث USERS
+      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
+        var m=USERS.find(function(x){return x.username===u.login;});
+        if(m){m.password=u.pass;m.role=u.role;}
+        else USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});
+      });}}catch(e){}
+
+      // تحديث الواجهة دائماً عند وجود تغيير
+      if(changed){
+        try{
+          var page=document.querySelector('.page.active');
+          if(page) renderPage(page.id.replace('page-',''));
+        }catch(e){}
+        try{
+          if(typeof renderDashboard==='function'){
+            var dash=document.getElementById('page-dashboard');
+            if(dash&&dash.classList.contains('active')) renderDashboard();
+          }
+        }catch(e){}
+      }
       fbStatus('live');
+    }, function(err){
+      console.error('Firebase listener error:', err);
+      fbStatus('offline');
     });
 
     // مراقبة الاتصال والمزامنة التلقائية
@@ -5307,14 +5407,8 @@ function fbInit(){
 }
 
 
-// ── مزامنة دورية كل 30 ثانية ──
-setInterval(function(){
-  try{
-    if(window._fbOK && window._fbRef && navigator.onLine){
-      if(typeof saveDB==='function') saveDB();
-    }
-  }catch(e){}
-}, 30000);
+// ── Firebase SDK يتولى المزامنة الفورية تلقائياً ──
+// لا نحتاج polling دوري للرفع
 
 function fbStatus(s){
   var el = document.getElementById('_fbBadge');
@@ -5336,25 +5430,25 @@ var _fbIgnoreUntil = 0;
 var _fbSaving = false;
 
 function patchSaveDB(){
-  _origSaveDB = window.saveDB;
   window.saveDB = function(){
     // حفظ محلي فوري
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-    // رفع Firebase مع حماية من overwrite
+    // رفع Firebase — بدون أي حجب أو تجاهل
     if(_fbRef && _fbOK){
       _fbSaving = true;
-      _fbIgnoreNext = true;
-      _fbIgnoreUntil = Date.now() + 5000;
+      // أضف timestamp لضمان الفوز بآخر نسخة
+      DB._lastUpdate = Date.now();
+      DB._lastDevice = window._deviceId || 'unknown';
       var snapshot = JSON.parse(JSON.stringify(DB));
       _fbRef.set(snapshot)
         .then(function(){
-          fbStatus('saved');
           _fbSaving = false;
-          setTimeout(function(){ fbStatus('live'); }, 2000);
+          fbStatus('live');
         })
-        .catch(function(){
-          fbStatus('offline');
+        .catch(function(e){
           _fbSaving = false;
+          fbStatus('offline');
+          console.warn('Firebase push failed:', e);
         });
     }
   };
@@ -5372,12 +5466,29 @@ window.addEventListener('load', function(){
         setTimeout(function(){
           fbInit();
           patchSaveDB();
-          // رفع البيانات الموجودة
+          // اجلب البيانات من Firebase فوراً بعد الدخول
           if(_fbRef && _fbOK){
             _fbRef.once('value').then(function(snap){
-              if(!snap.val()){
+              var d = snap.val();
+              if(!d){
                 // قاعدة فارغة — ارفع البيانات المحلية
                 window.saveDB();
+              } else {
+                // Firebase يملك بيانات — استبدل المحلية بها دائماً
+                var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices',
+                  'ledger','users','config','keys','salesDeductions','balanceRecords',
+                  'stockLedger','withdrawals','employees','rentItems','expHistory'];
+                keys.forEach(function(k){ if(d[k]!==undefined) DB[k]=d[k]; });
+                try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
+                try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
+                  var m=USERS.find(function(x){return x.username===u.login;});
+                  if(m){m.password=u.pass;m.role=u.role;}
+                  else USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});
+                });}}catch(e){}
+                try{renderDashboard();}catch(e){}
+                try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+                fbStatus('live');
+                console.log('✅ تم جلب البيانات من Firebase عند الدخول');
               }
             });
           }
@@ -7398,6 +7509,8 @@ function _sb(s,c){
 }
 
 function _doSync(){
+  // إذا Firebase SDK متاح يتولى الرفع — لا نتدخل
+  if(window._fbOK && window._fbRef){ return; }
   if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
   _sb('⬆ رفع...','#00c8ff');
   try{
@@ -7451,22 +7564,25 @@ function _doPull(){
 }
 
 function _startSync(){
-  _doSync();
+  // يجلب فقط — لا يرفع
+  _doPull();
   if(_sT)clearInterval(_sT);
   _sT=setInterval(_doPull,1500);
 }
 
 
 window.addEventListener('online',function(){
-  if(typeof _startSync==='function')_startSync();
-  try{toast('📶 تمت المزامنة','green');}catch(e){}
+  // عودة الإنترنت: اجلب البيانات فقط
+  if(typeof amwajForcePull==='function') amwajForcePull();
+  else if(typeof _doPull==='function') _doPull();
+  try{toast('📶 الإنترنت عاد - جاري الجلب...','green');}catch(e){}
 });
 window.addEventListener('offline',function(){
   if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
 });
 
 
-window.addEventListener('online',function(){amwajStart();try{toast('📶 تمت المزامنة','green');}catch(e){}});
+// online handler موحد أعلاه
 window.addEventListener('offline',function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
 </script>
 
