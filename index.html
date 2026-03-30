@@ -3029,6 +3029,7 @@ function saveDebtEntry(){
   document.getElementById('de_desc').value=''; document.getElementById('de_amt').value=0;
   document.getElementById('debtEntryForm').classList.remove('open');
   saveDB();
+  _amwajH='';
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function saveReceiptEntry(){
@@ -3038,9 +3039,11 @@ function saveReceiptEntry(){
   if(e&&amt>e.debt&&e.debt>0&&!confirm(`المبلغ (${fmt(amt)}) أكبر من الدين (${fmt(e.debt)}). متابعة؟`))return;
   pushLedger(activeAccId,'دفعة',desc,0,amt); syncBalance(activeAccId);
   saveDB();
+  _amwajH=''; // إجبار المزامنة الفورية عند جميع المستخدمين
   document.getElementById('re_desc').value=''; document.getElementById('re_amt').value=0;
   document.getElementById('receiptEntryForm').classList.remove('open');
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
+  toast('تم حفظ الإيصال وجاري التزامن...','green');
 }
 function settleDebt(id,type){
   const e=(type==='customer'?DB.customers:DB.suppliers).find(x=>x.id===id);
@@ -3125,8 +3128,15 @@ function deleteRow(arr,id,page){
   const idx=arr.findIndex(x=>x.id===id);
   if(idx<0)return;
   if(!confirm('حذف هذا السجل؟'))return;
-  arr.splice(idx,1); renderPage(page);
+  arr.splice(idx,1);
+  // إذا حذفنا مبيعة نحذفها من invoices أيضاً
+  if(page==='sales'){
+    DB.invoices=DB.invoices.filter(function(inv){return inv.id!==id&&!(typeof id==='number'&&typeof inv.id==='string'&&inv.id===String(id));});
+  }
   saveDB();
+  _amwajH=''; // إجبار اكتشاف التغيير لدى المستخدمين الآخرين
+  renderPage(page);
+  toast('تم الحذف وسيتزامن تلقائياً','green');
 }
 
 function printInvoice(id){
@@ -4359,7 +4369,8 @@ function amwajPull(){
     _amwajH=h;
     var changed=false;
     ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-     'ledger','users','config','keys','salaries','expenses','withdrawals'].forEach(function(k){
+     'ledger','users','config','keys','salaries','expenses','withdrawals',
+     'salesDeductions','balanceRecords','stockLedger'].forEach(function(k){
       if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){DB[k]=d[k];changed=true;}
     });
     if(changed){
@@ -4382,7 +4393,7 @@ function amwajSync(){
 function amwajStart(){
   amwajPush();
   if(_amwajT)clearInterval(_amwajT);
-  _amwajT=setInterval(amwajPull,3000);
+  _amwajT=setInterval(amwajPull,800);
 }
 function loadDB(){
   try{
@@ -4791,12 +4802,18 @@ function fullSystemReset(){
 function dangerOp(type){
   const msgs={sales:'حذف جميع سجلات المبيعات؟',purchases:'حذف جميع سجلات المشتريات؟',debts:'مسح جميع الديون وأرصدة الحسابات؟',all:'⚠ إعادة ضبط النظام بالكامل؟ سيُحذف كل شيء!'};
   if(!confirm(msgs[type])) return;
-  if(type==='sales'){DB.sales=[];DB.salesDeductions=[];}
-  else if(type==='purchases') DB.purchases=[];
+  if(type==='sales'){DB.sales=[];DB.salesDeductions=[];DB.invoices=[];}
+  else if(type==='purchases'){DB.purchases=[];}
   else if(type==='debts'){DB.ledger={};DB.customers.forEach(c=>c.debt=0);DB.suppliers.forEach(s=>s.debt=0);}
   else if(type==='all'){['sales','purchases','customers','suppliers','inventory','returns','invoices'].forEach(k=>DB[k]=[]);DB.ledger={};DB.salesDeductions=[];}
+  // حفظ ورفع فوري لضمان التزامن مع جميع المستخدمين
+  saveDB();
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+  // إجبار إعادة pull فوري لتفعيل التغيير عند المستخدمين الآخرين
+  _amwajH=''; // إعادة تعيين hash لضمان اكتشاف التغيير
+  setTimeout(function(){amwajPull();},300);
   renderSysInfo(); renderDashboard();
-  toast('✅ تمت العملية بنجاح','green');
+  toast('✅ تمت العملية - جاري التزامن...','green');
 }
 
 // Backup
@@ -7436,7 +7453,7 @@ function _doPull(){
 function _startSync(){
   _doSync();
   if(_sT)clearInterval(_sT);
-  _sT=setInterval(_doPull,5000);
+  _sT=setInterval(_doPull,1500);
 }
 
 
