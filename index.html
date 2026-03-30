@@ -634,9 +634,17 @@ tr:hover td{background:var(--td-hover);}
           </div>
 <div style="display:none"><input id="s_cat" value=""></div>
           <div class="form-group">
+            <label>الصنف / الفئة *</label>
+            <div class="ac-wrap">
+              <input id="s_cat_visible" placeholder="مثال: جوالات، لابتوب..." autocomplete="off"
+                oninput="sCatFilter(this.value)" onblur="setTimeout(()=>acClose('s_cat_visible'),180)">
+              <div class="ac-list" id="ac_s_cat_visible"></div>
+            </div>
+          </div>
+          <div class="form-group">
             <label>الموديل * <button type="button" onclick="openBC('s_model')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label>
             <div class="ac-wrap">
-              <input id="s_model" placeholder="مثال: جوالات - Samsung A55" autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
+              <input id="s_model" placeholder="اكتب للبحث..." autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat_visible').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
               <div class="ac-list" id="ac_s_model"></div>
             </div>
           </div>
@@ -797,8 +805,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <div class="add-form" id="invForm">
         <div class="form-grid">
-          <div class="form-group ac-wrap"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: Samsung A55" autocomplete="off" oninput="invNameAC(this.value)" onblur="setTimeout(()=>acClose('inv_name'),200)"><div class="ac-list" id="ac_inv_name"></div></div>
-          <div class="form-group"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات، لابتوب، اكسسوارات"></div>
+          <div class="form-group ac-wrap"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات، لابتوب، اكسسوارات" autocomplete="off" oninput="invCatAC(this.value)" onblur="setTimeout(()=>acClose('inv_cat'),200)"><div class="ac-list" id="ac_inv_cat"></div></div>
+          <div class="form-group ac-wrap"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="اكتب للبحث أو أدخل موديل جديد" autocomplete="off" oninput="invNameAC(this.value)" onblur="setTimeout(()=>acClose('inv_name'),200)"><div class="ac-list" id="ac_inv_name"></div></div>
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر البيع (ر.ي) *</label><input id="inv_sell" type="number" value="0" min="0"></div>
@@ -1969,8 +1977,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <!-- Column headers - محسّن -->
       <div style="display:grid;grid-template-columns:1.6fr 1fr 80px 90px 90px 90px 36px;gap:5px;background:var(--th-bg);border-radius:7px;padding:7px 8px;margin-bottom:6px;">
-        <div style="font-size:10px;color:var(--green);font-weight:700;">✏️ اسم الصنف / الموديل *</div>
-        <div style="font-size:10px;color:var(--muted);font-weight:700;">الصنف/الفئة</div>
+        <div style="font-size:10px;color:var(--purple);font-weight:700;">✏️ الصنف / الفئة *</div>
+        <div style="font-size:10px;color:var(--green);font-weight:700;">الموديل / الوصف</div>
         <div style="font-size:10px;color:var(--yellow);font-weight:700;text-align:center;">الكمية</div>
         <div style="font-size:10px;color:var(--muted);font-weight:700;text-align:center;">سعر الشراء</div>
         <div style="font-size:10px;color:var(--green);font-weight:700;text-align:center;">سعر البيع</div>
@@ -2395,7 +2403,8 @@ function acSelect(fieldId, type, idx, filterCat){
   if(fieldId==='s_model'&&item.data){
     const inv=item.data;
     document.getElementById('s_price').value=inv.sellPrice||0;
-    if(!document.getElementById('s_cat').value) document.getElementById('s_cat').value=inv.category;
+    document.getElementById('s_cat').value=inv.category||'';
+    document.getElementById('s_cat_visible').value=inv.category||'';
     calcSaleTotal();
   }
   if(fieldId==='s_cust'&&item.data){
@@ -2482,7 +2491,7 @@ function addSale(){
   DB.sales.unshift({id:Date.now(),invId,date:nowISO(),customer:defer?custName:'نقدي',custId,category:inv.category,model:inv.name,qty,price,total,paid,remain,saleType,status:saleType==='نقدي'?'مكتمل':calcStat(total,paid)});
   DB.invoices.unshift({id:invId,date:nowISO(),customer:defer?custName:'نقدي',model:inv.name,total,paid,status:saleType==='نقدي'?'مكتمل':calcStat(total,paid)});
   // reset
-  ['s_cust','s_phone','s_cat','s_model','s_price','s_discount','s_total','s_remain'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['s_cust','s_phone','s_cat','s_cat_visible','s_model','s_price','s_discount','s_total','s_remain'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('s_qty').value=1; document.getElementById('s_paid').value=0;
   document.getElementById('s_type').value='نقدي'; onSaleTypeChange();
   saveDB();
@@ -2536,16 +2545,16 @@ function pmAddRow(){
   const div=document.createElement('div');
   div.id='prow_'+id; div.className='prow';
   div.innerHTML=
-    // Col 1: Category with autocomplete
+    // Col 1: Category with autocomplete (الصنف أولاً)
     `<div style="position:relative">
-      <input placeholder="الصنف / الفئة" id="pr_cat_${id}" autocomplete="off"
+      <input placeholder="الصنف * (مثال: جوالات)" id="pr_cat_${id}" autocomplete="off"
         oninput="pmCatAC(${id},this.value)" onblur="setTimeout(()=>acClose('pr_cat_${id}'),200)"
-        style="background:var(--input-bg);border:1px solid #a78bfa40;border-radius:7px;padding:7px 9px;color:var(--purple);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;">
+        style="background:var(--input-bg);border:1.5px solid #a78bfa60;border-radius:7px;padding:7px 9px;color:var(--purple);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;font-weight:700;">
       <div class="ac-list" id="ac_pr_cat_${id}"></div>
     </div>`+
-    // Col 2: Model name with autocomplete
+    // Col 2: Model name with autocomplete (الموديل ثانياً)
     `<div style="position:relative">
-      <input placeholder="الموديل / الوصف *" id="pr_name_${id}" autocomplete="off"
+      <input placeholder="الموديل (اختياري)" id="pr_name_${id}" autocomplete="off"
         oninput="pmRowAC(${id},this.value)" onblur="setTimeout(()=>acClose('pr_name_${id}'),200)"
         style="background:var(--input-bg);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;">
       <div class="ac-list" id="ac_pr_name_${id}"></div>
@@ -2679,12 +2688,10 @@ function savePurchaseInvoice(){
       const nameVal=(nameEl?nameEl.value:'').trim();
       const catVal=(catEl?catEl.value:'').trim();
 
-      // الاسم = pr_name إذا ممتلئ، وإلا pr_cat، وإلا تجاهل
+      // الصنف إلزامي، الموديل اختياري
+      const category = catVal;
+      if(!category) return; // تجاهل الصفوف بدون صنف
       const name = nameVal || catVal;
-      if(!name) return;
-
-      // الصنف = pr_cat إذا مختلف عن الاسم
-      const category = (catVal && catVal !== name) ? catVal : '—';
       const qty=Math.max(1, parseInt(qtyEl?qtyEl.value:1)||1);
       const buyPrice=parseFloat(buyEl?buyEl.value:0)||0;
       const sellPrice=parseFloat(sellEl?sellEl.value:0)||0;
@@ -2844,9 +2851,10 @@ function addCustomer(){
   toggleForm('custForm'); renderPage('customers');
 }
 function addInventory(){
-  var name=(document.getElementById('inv_name').value||'').trim();
   var cat=(document.getElementById('inv_cat').value||'').trim();
-  if(!name||!cat){alert('يرجى إدخال الاسم والصنف');return;}
+  var name=(document.getElementById('inv_name').value||'').trim();
+  if(!cat){alert('يرجى إدخال الصنف أولاً');return;}
+  if(!name) name=cat;
   var minEl=document.getElementById('inv_min');
   var minV=minEl?+minEl.value:3; if(isNaN(minV)||minV<0)minV=3;
   DB.inventory.push({
@@ -2867,18 +2875,79 @@ function addInventory(){
   renderPage('inventory');
   toast('تمت اضافة '+name+' للمخزون','green');
 }
-// إكمال تلقائي لحقل الموديل في المخزون
+// ═══ إكمال تلقائي: الصنف في نموذج البيع ═══
+function sCatFilter(val){
+  var catInput=document.getElementById('s_cat');
+  catInput.value=val;
+  // مسح الموديل عند تغيير الصنف
+  document.getElementById('s_model').value='';
+  document.getElementById('s_price').value='';
+  calcSaleTotal();
+  var listEl=document.getElementById('ac_s_cat_visible');
+  if(!listEl)return;
+  var q=(val||'').trim().toLowerCase();
+  var cats=[...new Set((DB.inventory||[]).filter(i=>i.qty>0).map(i=>i.category))];
+  if(q) cats=cats.filter(c=>c.toLowerCase().indexOf(q)>-1);
+  cats=cats.slice(0,8);
+  if(!cats.length){listEl.classList.remove('open');return;}
+  listEl.innerHTML=cats.map(function(c){
+    var cnt=(DB.inventory||[]).filter(i=>i.category===c&&i.qty>0).length;
+    return '<div class="ac-item" onmousedown="sCatPick(\''+c.replace(/'/g,"\\'")+'\')">'
+      +'<span class="ac-main">'+c+'</span>'
+      +'<span class="ac-sub">'+cnt+' موديل متوفر</span></div>';
+  }).join('');
+  listEl.classList.add('open');
+}
+function sCatPick(cat){
+  document.getElementById('s_cat').value=cat;
+  document.getElementById('s_cat_visible').value=cat;
+  document.getElementById('s_model').value='';
+  document.getElementById('s_price').value='';
+  acClose('s_cat_visible');
+  calcSaleTotal();
+  // فتح قائمة الموديلات تلقائياً
+  setTimeout(function(){
+    document.getElementById('s_model').focus();
+    acSearch('s_model','model',cat);
+  },100);
+}
+
+// ═══ إكمال تلقائي: الصنف في المخزون ═══
+function invCatAC(val){
+  var listEl=document.getElementById('ac_inv_cat');
+  if(!listEl)return;
+  var q=(val||'').trim().toLowerCase();
+  var cats=[...new Set((DB.inventory||[]).map(i=>i.category))];
+  if(q) cats=cats.filter(c=>c.toLowerCase().indexOf(q)>-1);
+  cats=cats.slice(0,8);
+  if(!cats.length){listEl.classList.remove('open');return;}
+  listEl.innerHTML=cats.map(function(c){
+    return '<div class="ac-item" onmousedown="invCatPick(\''+c.replace(/'/g,"\\'")+'\')">'
+      +'<span class="ac-main">'+c+'</span></div>';
+  }).join('');
+  listEl.classList.add('open');
+}
+function invCatPick(cat){
+  document.getElementById('inv_cat').value=cat;
+  acClose('inv_cat');
+  setTimeout(function(){document.getElementById('inv_name').focus();},100);
+}
+
+// ═══ إكمال تلقائي: الموديل في المخزون (مفلتر بالصنف) ═══
 function invNameAC(val){
   var listEl=document.getElementById('ac_inv_name');
   if(!listEl)return;
-  val=(val||'').trim().toLowerCase();
-  if(!val){listEl.classList.remove('open');return;}
+  var q=(val||'').trim().toLowerCase();
+  if(!q){listEl.classList.remove('open');return;}
+  var cat=(document.getElementById('inv_cat').value||'').trim().toLowerCase();
   var matches=(DB.inventory||[]).filter(function(i){
-    return i.name&&i.name.toLowerCase().indexOf(val)>-1;
+    var nameMatch=i.name&&i.name.toLowerCase().indexOf(q)>-1;
+    var catMatch=!cat||i.category.toLowerCase()===cat;
+    return nameMatch&&catMatch;
   }).slice(0,8);
   if(!matches.length){listEl.classList.remove('open');return;}
   listEl.innerHTML=matches.map(function(i){
-    return '<div class="ac-item" onmousedown="invNamePick(\''+i.id+'\')">'
+    return '<div class="ac-item" onmousedown="invNamePick('+i.id+')">'
       +'<span class="ac-main">'+i.name+'</span>'
       +'<span class="ac-sub">'+i.category+' — مخزون: '+i.qty+'</span></div>';
   }).join('');
@@ -3996,25 +4065,6 @@ function renderInventoryTable(){
 
 
 
-function saveEditInv(){
-  var id=+document.getElementById('ei_id').value;
-  var inv=DB.inventory.find(function(i){return i.id===id;});
-  if(!inv)return;
-  var name=(document.getElementById('ei_name').value||'').trim();
-  var cat=(document.getElementById('ei_cat').value||'').trim();
-  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
-  inv.name=name; inv.category=cat;
-  inv.qty=+document.getElementById('ei_qty').value||0;
-  inv.buyPrice=+document.getElementById('ei_buy').value||0;
-  inv.sellPrice=+document.getElementById('ei_sell').value||0;
-  inv.minQty=+document.getElementById('ei_min').value||3;
-  saveDB();
-  document.getElementById('editInvModal').classList.remove('open');
-  renderPage('inventory');
-  checkLowStockAlerts();
-  toast('تم تحديث '+name,'green');
-}
-
 function openEditInv(id){
   var inv=DB.inventory.find(function(i){return i.id===id;});
   if(!inv)return;
@@ -4038,12 +4088,20 @@ function openEditInv(id){
     _h.appendChild(_t); _h.appendChild(_c); md.appendChild(_h);
     var _g=document.createElement('div');
     _g.className='form-grid'; _g.style.marginTop='10px';
-    [['ei_name','الاسم *'],['ei_cat','الصنف *'],['ei_qty','الكمية'],['ei_buy','سعر الشراء'],['ei_sell','سعر البيع'],['ei_min','حد التنبيه']].forEach(function(f){
-      var d=document.createElement('div'); d.className='form-group';
+    // الصنف أولاً مع إكمال تلقائي ثم الموديل
+    [['ei_cat','الصنف / الفئة *','text'],['ei_name','الموديل / الاسم *','text'],['ei_qty','الكمية','number'],['ei_buy','سعر الشراء','number'],['ei_sell','سعر البيع','number'],['ei_min','حد التنبيه','number']].forEach(function(f){
+      var d=document.createElement('div'); d.className=(f[2]==='text'?'form-group ac-wrap':'form-group');
       var l=document.createElement('label'); l.textContent=f[1];
-      var i=document.createElement('input'); i.id=f[0]; i.className='pm-inp';
-      if(f[0].indexOf('_q')>0||f[0].indexOf('_b')>0||f[0].indexOf('_s')>0||f[0].indexOf('_m')>0){i.type='number';i.min='0';}
-      d.appendChild(l); d.appendChild(i); _g.appendChild(d);
+      var inp=document.createElement('input'); inp.id=f[0]; inp.className='pm-inp';
+      if(f[2]==='number'){inp.type='number';inp.min='0';}
+      else {
+        inp.autocomplete='off';
+        if(f[0]==='ei_cat'){inp.setAttribute('oninput','editInvCatAC(this.value)');inp.setAttribute('onblur','setTimeout(function(){acClose("ei_cat");},200)');}
+        else {inp.setAttribute('oninput','editInvNameAC(this.value)');inp.setAttribute('onblur','setTimeout(function(){acClose("ei_name");},200)');}
+        var acDiv=document.createElement('div'); acDiv.className='ac-list'; acDiv.id='ac_'+f[0];
+        d.appendChild(l); d.appendChild(inp); d.appendChild(acDiv); _g.appendChild(d); return;
+      }
+      d.appendChild(l); d.appendChild(inp); _g.appendChild(d);
     });
     md.appendChild(_g);
     var _hid=document.createElement('input'); _hid.type='hidden'; _hid.id='ei_id'; md.appendChild(_hid);
@@ -4062,13 +4120,62 @@ function openEditInv(id){
   document.getElementById('ei_min').value=inv.minQty!=null?inv.minQty:3;
   m.classList.add('open');
 }
+// إكمال تلقائي لحقل الصنف في نافذة التعديل
+function editInvCatAC(val){
+  var listEl=document.getElementById('ac_ei_cat');
+  if(!listEl)return;
+  var v=(val||'').trim().toLowerCase();
+  var cats=[...new Set((DB.inventory||[]).map(function(i){return i.category;}))];
+  if(v) cats=cats.filter(function(c){return c.toLowerCase().indexOf(v)>-1;});
+  cats=cats.slice(0,8);
+  if(!cats.length){listEl.classList.remove('open');return;}
+  listEl.innerHTML=cats.map(function(c){
+    return '<div class="ac-item" onmousedown="editInvCatPick(''+c.replace(/'/g,"\\'")+'')">'
+      +'<span class="ac-main">'+c+'</span></div>';
+  }).join('');
+  listEl.classList.add('open');
+}
+function editInvCatPick(cat){
+  var el=document.getElementById('ei_cat');
+  if(el) el.value=cat;
+  acClose('ei_cat');
+  // تصفية قائمة الموديل حسب الصنف المختار
+  var nameEl=document.getElementById('ei_name');
+  if(nameEl) editInvNameAC(nameEl.value);
+}
+function editInvNameAC(val){
+  var listEl=document.getElementById('ac_ei_name');
+  if(!listEl)return;
+  var v=(val||'').trim().toLowerCase();
+  var cat=(document.getElementById('ei_cat').value||'').trim().toLowerCase();
+  var matches=(DB.inventory||[]).filter(function(i){
+    var catMatch=!cat||i.category.toLowerCase()===cat;
+    var nameMatch=!v||(i.name&&i.name.toLowerCase().indexOf(v)>-1);
+    return catMatch&&nameMatch;
+  }).slice(0,8);
+  if(!matches.length){listEl.classList.remove('open');return;}
+  listEl.innerHTML=matches.map(function(i){
+    return '<div class="ac-item" onmousedown="editInvNamePick('+i.id+')">'
+      +'<span class="ac-main">'+i.name+'</span>'
+      +'<span class="ac-sub">'+i.category+' — مخزون: '+i.qty+'</span></div>';
+  }).join('');
+  listEl.classList.add('open');
+}
+function editInvNamePick(id){
+  var inv=(DB.inventory||[]).find(function(i){return i.id===id||i.id==id;});
+  if(!inv)return;
+  document.getElementById('ei_name').value=inv.name;
+  acClose('ei_name');
+}
+
 function saveEditInv(){
   var id=+document.getElementById('ei_id').value;
   var inv=DB.inventory.find(function(i){return i.id===id;});
   if(!inv)return;
   var name=(document.getElementById('ei_name').value||'').trim();
   var cat=(document.getElementById('ei_cat').value||'').trim();
-  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
+  if(!cat){alert('يرجى إدخال الصنف');return;}
+  if(!name) name=cat; // إذا لم يدخل الموديل يستخدم الصنف بدلاً
   inv.name=name; inv.category=cat;
   inv.qty=+document.getElementById('ei_qty').value||0;
   inv.buyPrice=+document.getElementById('ei_buy').value||0;
