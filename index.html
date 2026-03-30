@@ -797,8 +797,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <div class="add-form" id="invForm">
         <div class="form-grid">
-          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: جوالات - Samsung A55"></div>
-          <input id="inv_cat" type="hidden" value="">
+          <div class="form-group ac-wrap"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: Samsung A55" autocomplete="off" oninput="invNameAC(this.value)" onblur="setTimeout(()=>acClose('inv_name'),200)"><div class="ac-list" id="ac_inv_name"></div></div>
+          <div class="form-group"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات، لابتوب، اكسسوارات"></div>
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر البيع (ر.ي) *</label><input id="inv_sell" type="number" value="0" min="0"></div>
@@ -2867,6 +2867,35 @@ function addInventory(){
   renderPage('inventory');
   toast('تمت اضافة '+name+' للمخزون','green');
 }
+// إكمال تلقائي لحقل الموديل في المخزون
+function invNameAC(val){
+  var listEl=document.getElementById('ac_inv_name');
+  if(!listEl)return;
+  val=(val||'').trim().toLowerCase();
+  if(!val){listEl.classList.remove('open');return;}
+  var matches=(DB.inventory||[]).filter(function(i){
+    return i.name&&i.name.toLowerCase().indexOf(val)>-1;
+  }).slice(0,8);
+  if(!matches.length){listEl.classList.remove('open');return;}
+  listEl.innerHTML=matches.map(function(i){
+    return '<div class="ac-item" onmousedown="invNamePick(\''+i.id+'\')">'
+      +'<span class="ac-main">'+i.name+'</span>'
+      +'<span class="ac-sub">'+i.category+' — مخزون: '+i.qty+'</span></div>';
+  }).join('');
+  listEl.classList.add('open');
+}
+function invNamePick(id){
+  var inv=(DB.inventory||[]).find(function(i){return i.id===id||i.id==id;});
+  if(!inv)return;
+  document.getElementById('inv_name').value=inv.name;
+  document.getElementById('inv_cat').value=inv.category||'';
+  var buyEl=document.getElementById('inv_buy');
+  var sellEl=document.getElementById('inv_sell');
+  if(buyEl&&inv.buyPrice)buyEl.value=inv.buyPrice;
+  if(sellEl&&inv.sellPrice)sellEl.value=inv.sellPrice;
+  acClose('inv_name');
+}
+
 function addReturn(){
   const retType=document.getElementById('ret_type').value;
   const itemName=document.getElementById('ret_item').value.trim()||'—';
@@ -4656,10 +4685,10 @@ function fullSystemReset(){
 function dangerOp(type){
   const msgs={sales:'حذف جميع سجلات المبيعات؟',purchases:'حذف جميع سجلات المشتريات؟',debts:'مسح جميع الديون وأرصدة الحسابات؟',all:'⚠ إعادة ضبط النظام بالكامل؟ سيُحذف كل شيء!'};
   if(!confirm(msgs[type])) return;
-  if(type==='sales') DB.sales=[];
+  if(type==='sales'){DB.sales=[];DB.salesDeductions=[];}
   else if(type==='purchases') DB.purchases=[];
   else if(type==='debts'){DB.ledger={};DB.customers.forEach(c=>c.debt=0);DB.suppliers.forEach(s=>s.debt=0);}
-  else if(type==='all'){['sales','purchases','customers','suppliers','inventory','returns','invoices'].forEach(k=>DB[k]=[]);DB.ledger={};}
+  else if(type==='all'){['sales','purchases','customers','suppliers','inventory','returns','invoices'].forEach(k=>DB[k]=[]);DB.ledger={};DB.salesDeductions=[];}
   renderSysInfo(); renderDashboard();
   toast('✅ تمت العملية بنجاح','green');
 }
