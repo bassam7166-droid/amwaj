@@ -288,7 +288,7 @@ tr:hover td{background:var(--td-hover);}
 @media(max-width:768px){
 
   /* Body layout */
-  #appShell:not([style*="display:none"]){display:flex!important;flex-direction:column!important;height:100dvh!important;overflow:hidden!important;}
+  #appShell{display:flex!important;flex-direction:column!important;height:100dvh!important;overflow:hidden!important;}
 
   /* Hide desktop sidebar */
   #sidebar{display:none!important;}
@@ -2848,7 +2848,6 @@ function addCustomer(){
   ['cust_name','cust_phone','cust_city'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cust_debt').value=0;
   saveDB();
-  saveDB();
   toggleForm('custForm'); renderPage('customers');
 }
 function addInventory(){
@@ -3121,13 +3120,6 @@ function doSendWhatsApp(id,type){
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 function sendWhatsApp(){if(activeAccId)doSendWhatsApp(activeAccId,activeAccType);}
-
-function canDelete(page){
-  if(!currentUser) return false;
-  if(isManager()) return true;
-  var blocked=['purchases','suppliers'];
-  return !blocked.includes(page);
-}
 
 function deleteRow(arr,id,page){
   const idx=arr.findIndex(x=>x.id===id);
@@ -4138,8 +4130,7 @@ function editInvCatAC(val){
   cats=cats.slice(0,8);
   if(!cats.length){listEl.classList.remove('open');return;}
   listEl.innerHTML=cats.map(function(c){
-    return '<div class="ac-item" onmousedown="editInvCatPick(''+c.replace(/'/g,"\\'")+'')">'
-      +'<span class="ac-main">'+c+'</span></div>';
+    return '<div class="ac-item" onmousedown="editInvCatPick(\'' + c.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' + '<span class="ac-main">' + c + '</span></div>';
   }).join('');
   listEl.classList.add('open');
 }
