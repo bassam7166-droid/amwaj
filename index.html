@@ -632,17 +632,11 @@ tr:hover td{background:var(--td-hover);}
             <label>جوال العميل</label>
             <input id="s_phone" placeholder="للواتساب">
           </div>
-          <div class="form-group">
-            <label>الصنف *</label>
-            <div class="ac-wrap">
-              <input id="s_cat" placeholder="اكتب الصنف..." autocomplete="off" oninput="acSearch('s_cat','category')" onblur="setTimeout(()=>acClose('s_cat'),180)">
-              <div class="ac-list" id="ac_s_cat"></div>
-            </div>
-          </div>
+<div style="display:none"><input id="s_cat" value=""></div>
           <div class="form-group">
             <label>الموديل * <button type="button" onclick="openBC('s_model')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label>
             <div class="ac-wrap">
-              <input id="s_model" placeholder="اكتب الموديل..." autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
+              <input id="s_model" placeholder="مثال: جوالات - Samsung A55" autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
               <div class="ac-list" id="ac_s_model"></div>
             </div>
           </div>
@@ -803,8 +797,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <div class="add-form" id="invForm">
         <div class="form-grid">
-          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: Samsung A55"></div>
-          <div class="form-group"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات"></div>
+          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: جوالات - Samsung A55"></div>
+          <input id="inv_cat" type="hidden" value="">
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر البيع (ر.ي) *</label><input id="inv_sell" type="number" value="0" min="0"></div>
@@ -2936,6 +2930,7 @@ function saveDebtEntry(){
   pushLedger(activeAccId,'دين',desc,amt,0); syncBalance(activeAccId);
   document.getElementById('de_desc').value=''; document.getElementById('de_amt').value=0;
   document.getElementById('debtEntryForm').classList.remove('open');
+  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function saveReceiptEntry(){
@@ -2944,6 +2939,7 @@ function saveReceiptEntry(){
   const e=(activeAccType==='customer'?DB.customers:DB.suppliers).find(x=>x.id===activeAccId);
   if(e&&amt>e.debt&&e.debt>0&&!confirm(`المبلغ (${fmt(amt)}) أكبر من الدين (${fmt(e.debt)}). متابعة؟`))return;
   pushLedger(activeAccId,'دفعة',desc,0,amt); syncBalance(activeAccId);
+  saveDB();
   document.getElementById('re_desc').value=''; document.getElementById('re_amt').value=0;
   document.getElementById('receiptEntryForm').classList.remove('open');
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
@@ -3032,6 +3028,7 @@ function deleteRow(arr,id,page){
   if(idx<0)return;
   if(!confirm('حذف هذا السجل؟'))return;
   arr.splice(idx,1); renderPage(page);
+  saveDB();
 }
 
 function printInvoice(id){
