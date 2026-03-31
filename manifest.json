@@ -1,15 +1,16 @@
 {
   "name": "مركز أمواج الخليج للإلكترونيات",
-  "short_name": "أمواج الخليج",
-  "description": "نظام إدارة المبيعات والمخزون",
+  "short_name": "أمواج",
+  "description": "نظام إدارة مبيعات مركز أمواج الخليج",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#07090f",
-  "theme_color": "#07090f",
+  "theme_color": "#00c8ff",
+  "orientation": "portrait-primary",
   "lang": "ar",
   "dir": "rtl",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "icon-192.png",
@@ -22,6 +23,18 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "المبيعات",
+      "short_name": "مبيعات",
+      "url": "./index.html#sales"
+    },
+    {
+      "name": "المخزون",
+      "short_name": "مخزون",
+      "url": "./index.html#inventory"
     }
   ]
 }

@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>مركز أمواج الخليج للإلكترونيات</title>
+<!-- ═══ PWA Setup ═══ -->
+
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%2307090f'/><text x='90' y='125' font-size='100' text-anchor='middle'>📱</text></svg>">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="أمواج الخليج">
+<meta name="theme-color" content="#07090f">
+<meta name="application-name" content="مركز أمواج الخليج">
+<link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogItmF2LHZg9iyINij2YXZiNin2Kwg2KfZhNiu2YTZitisINmE2YTYpdmE2YPYqtix2YjZhtmK2KfYqiIsCiAgInNob3J0X25hbWUiOiAi2KPZhdmI2KfYrCDYp9mE2K7ZhNmK2KwiLAogICJkZXNjcmlwdGlvbiI6ICLZhti42KfZhSDYpdiv2KfYsdipINin2YTZhdio2YrYudin2Kog2YjYp9mE2YXYrtiy2YjZhiIsCiAgInN0YXJ0X3VybCI6ICIuLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzA3MDkwZiIsCiAgInRoZW1lX2NvbG9yIjogIiMwMGM4ZmYiLAogICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsCiAgImxhbmciOiAiYXIiLAogICJkaXIiOiAicnRsIiwKICAiaWNvbnMiOiBbCiAgICB7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJz48cmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5Micgcng9JzMyJyBmaWxsPSclMjMwNzA5MGYnLz48dGV4dCB4PSc5NicgeT0nMTMwJyBmb250LXNpemU9JzExMCcgdGV4dC1hbmNob3I9J21pZGRsZSc+8J+TsTwvdGV4dD48L3N2Zz4iLCAic2l6ZXMiOiAiMTkyeDE5MiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifSwKICAgIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDUxMiA1MTInPjxyZWN0IHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJyByeD0nODAnIGZpbGw9JyUyMzA3MDkwZicvPjx0ZXh0IHg9JzI1NicgeT0nMzQwJyBmb250LXNpemU9JzI4MCcgdGV4dC1hbmNob3I9J21pZGRsZSc+8J+TsTwvdGV4dD48L3N2Zz4iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLCAicHVycG9zZSI6ICJhbnkgbWFza2FibGUifQogIF0sCiAgImNhdGVnb3JpZXMiOiBbImJ1c2luZXNzIiwgInByb2R1Y3Rpdml0eSJdLAogICJwcmVmZXJfcmVsYXRlZF9hcHBsaWNhdGlvbnMiOiBmYWxzZQp9">
+
+
+
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -531,6 +544,10 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
+      <!-- زر تثبيت التطبيق -->
+      <button id="_installBtn" onclick="installApp()" style="display:none;align-items:center;gap:5px;background:linear-gradient(135deg,#00c8ff22,#a78bfa22);border:1px solid #00c8ff44;border-radius:8px;padding:5px 11px;color:#00c8ff;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+        📲 تثبيت
+      </button>
 <span id="_SB" onclick="forceSync()" title="اضغط لجلب آخر البيانات" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">⬇ جلب</span>
 <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
       <button onclick="amwajManualPush()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ رفع</button>
@@ -3606,6 +3623,46 @@ function printInvoice(id){
   </div>
 </div>
 
+
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _deferredPrompt = e;
+  showInstallBtn();
+});
+
+function showInstallBtn(){
+  var btn = document.getElementById('_installBtn');
+  if(btn) btn.style.display = 'flex';
+}
+
+function installApp(){
+  if(!_deferredPrompt){
+    // iOS — إرشادات يدوية
+    alert('لتثبيت التطبيق على iPhone:\n1️⃣ اضغط على زر المشاركة ⬆\n2️⃣ اختر "إضافة إلى الشاشة الرئيسية"\n3️⃣ اضغط "إضافة"');
+    return;
+  }
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(r){
+    if(r.outcome === 'accepted'){
+      toast('✅ تم تثبيت التطبيق بنجاح!', 'green');
+      var btn = document.getElementById('_installBtn');
+      if(btn) btn.style.display = 'none';
+    }
+    _deferredPrompt = null;
+  });
+}
+
+window.addEventListener('appinstalled', function(){
+  toast('✅ تم تثبيت أمواج الخليج كتطبيق', 'green');
+  var btn = document.getElementById('_installBtn');
+  if(btn) btn.style.display = 'none';
+});
+</script>
 </body>
 </html>`);
   w.document.close();
@@ -3926,6 +3983,16 @@ function printSaleReceipt(invId){
 <div class="center" style="font-size:11px;color:#666;margin-top:8px;">شكراً لتعاملكم معنا</div>
 <br>
 <button onclick="window.print()" style="width:100%;padding:10px;background:#1976d2;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖨 طباعة</button>
+
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+
+
+
+</script>
 </body></html>`;
   const w=window.open('','_blank','width=420,height=600');
   w.document.write(html);
@@ -5834,7 +5901,17 @@ function printEmpReport(empId,month){
     +'</tbody></table>'
     +'<div class="footer">تاريخ الطباعة: '+new Date().toLocaleDateString('ar')+'</div>'
     +'<br><button onclick="window.print()" style="display:block;margin:0 auto;padding:10px 30px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:14px;cursor:pointer;">🖨 طباعة</button>'
-    +'</body></html>';
+    +'
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+
+
+
+</script>
+</body></html>';
   const w=window.open('','_blank');w.document.write(html);w.document.close();
 }
 
@@ -5877,7 +5954,17 @@ function printEmpSummary(){
     +'</table>'
     +'<div style="text-align:center;margin-top:20px;font-size:11px;color:#999">تاريخ الطباعة: '+new Date().toLocaleDateString('ar')+'</div>'
     +'<br><button onclick="window.print()" style="display:block;margin:0 auto;padding:10px 30px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:14px;cursor:pointer;">🖨 طباعة</button>'
-    +'</body></html>';
+    +'
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+
+
+
+</script>
+</body></html>';
   const w=window.open('','_blank');w.document.write(html);w.document.close();
 }
 
@@ -7047,7 +7134,17 @@ function exportKeysSalesReport(){
   <tfoot><tr><td colspan="3" style="padding:9px 12px">الإجمالي (${rows.length} عملية)</td><td style="color:#16a34a">${fmt(total)} ر.ي</td></tr></tfoot>
   </table><br>
   <button onclick="window.print()" style="display:block;margin:0 auto;padding:10px 30px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:Cairo,sans-serif;font-size:14px;cursor:pointer;">🖨 طباعة</button>
-  </body></html>`;
+  
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+
+
+
+</script>
+</body></html>`;
   const w=window.open('','_blank'); w.document.write(html); w.document.close();
 }
 
@@ -7612,5 +7709,43 @@ window.addEventListener('offline',function(){_amwajSB('🔴 لا إنترنت','
   </div>
 </div>
 
+
+<script>
+// ═══ Service Worker Registration ═══
+
+// ═══ زر تثبيت التطبيق ═══
+var _deferredPrompt = null;
+
+
+
+
+
+// ═══ PWA Service Worker (مضمن) ═══
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  var swCode = "const CACHE = 'amwaj-v5';\nconst ASSETS = [];\n\nself.addEventListener('install', function(e){\n  self.skipWaiting();\n});\n\nself.addEventListener('activate', function(e){\n  e.waitUntil(\n    caches.keys().then(function(keys){\n      return Promise.all(\n        keys.filter(function(k){ return k !== CACHE; })\n          .map(function(k){ return caches.delete(k); })\n      );\n    }).then(function(){ return self.clients.claim(); })\n  );\n});\n\nself.addEventListener('fetch', function(e){\n  if(e.request.method !== 'GET') return;\n  var url = e.request.url;\n  // لا نخزن Firebase أو APIs خارجية\n  if(url.includes('firebase') || url.includes('googleapis') || url.includes('gstatic')) return;\n  e.respondWith(\n    fetch(e.request)\n      .then(function(res){\n        if(res && res.status === 200){\n          var clone = res.clone();\n          caches.open(CACHE).then(function(cache){ cache.put(e.request, clone); });\n        }\n        return res;\n      })\n      .catch(function(){\n        return caches.match(e.request);\n      })\n  );\n});\n\nself.addEventListener('message', function(e){\n  if(e.data === 'SKIP_WAITING') self.skipWaiting();\n});";
+  var blob = new Blob([swCode], {type: 'application/javascript'});
+  var swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: window.location.pathname.replace(/\/[^\/]*$/, '/') || '/'})
+    .then(function(reg){
+      console.log('✅ SW registered');
+      reg.update();
+    })
+    .catch(function(e){ console.warn('SW error:', e); });
+})();
+
+
+
+// تحقق تلقائي عند الدخول - أظهر زر التثبيت إذا لم يكن مثبتاً
+window.addEventListener('load', function(){
+  // إذا التطبيق مفتوح كـ PWA فعلاً فأخفِ الزر
+  if(window.matchMedia('(display-mode: standalone)').matches ||
+     window.navigator.standalone === true){
+    var btn = document.getElementById('_installBtn');
+    if(btn) btn.style.display = 'none';
+  }
+});
+
+</script>
 </body>
 </html>
