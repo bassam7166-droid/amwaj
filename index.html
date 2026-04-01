@@ -531,9 +531,9 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
-<span id="_SB" onclick="forceSync()" title="اضغط لجلب آخر البيانات" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">⬇ جلب</span>
-<button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
-      <button onclick="amwajManualPush()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">⬆ رفع</button>
+<span id="_SB" onclick="_doSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;user-select:none;">💾 محلي</span>
+      <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
+      <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
       <span class="date-chip" id="dateChip"></span>
@@ -632,19 +632,17 @@ tr:hover td{background:var(--td-hover);}
             <label>جوال العميل</label>
             <input id="s_phone" placeholder="للواتساب">
           </div>
-<div style="display:none"><input id="s_cat" value=""></div>
           <div class="form-group">
-            <label>الصنف / الفئة *</label>
+            <label>الصنف *</label>
             <div class="ac-wrap">
-              <input id="s_cat_visible" placeholder="مثال: جوالات، لابتوب..." autocomplete="off"
-                oninput="sCatFilter(this.value)" onblur="setTimeout(()=>acClose('s_cat_visible'),180)">
-              <div class="ac-list" id="ac_s_cat_visible"></div>
+              <input id="s_cat" placeholder="اكتب الصنف..." autocomplete="off" oninput="acSearch('s_cat','category')" onblur="setTimeout(()=>acClose('s_cat'),180)">
+              <div class="ac-list" id="ac_s_cat"></div>
             </div>
           </div>
           <div class="form-group">
             <label>الموديل * <button type="button" onclick="openBC('s_model')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label>
             <div class="ac-wrap">
-              <input id="s_model" placeholder="اكتب للبحث..." autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat_visible').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
+              <input id="s_model" placeholder="اكتب الموديل..." autocomplete="off" oninput="acSearch('s_model','model',document.getElementById('s_cat').value)" onblur="setTimeout(()=>acClose('s_model'),180)">
               <div class="ac-list" id="ac_s_model"></div>
             </div>
           </div>
@@ -805,8 +803,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <div class="add-form" id="invForm">
         <div class="form-grid">
-          <div class="form-group ac-wrap"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات، لابتوب، اكسسوارات" autocomplete="off" oninput="invCatAC(this.value)" onblur="setTimeout(()=>acClose('inv_cat'),200)"><div class="ac-list" id="ac_inv_cat"></div></div>
-          <div class="form-group ac-wrap"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="اكتب للبحث أو أدخل موديل جديد" autocomplete="off" oninput="invNameAC(this.value)" onblur="setTimeout(()=>acClose('inv_name'),200)"><div class="ac-list" id="ac_inv_name"></div></div>
+          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: Samsung A55"></div>
+          <div class="form-group"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات"></div>
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر البيع (ر.ي) *</label><input id="inv_sell" type="number" value="0" min="0"></div>
@@ -1977,8 +1975,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <!-- Column headers - محسّن -->
       <div style="display:grid;grid-template-columns:1.6fr 1fr 80px 90px 90px 90px 36px;gap:5px;background:var(--th-bg);border-radius:7px;padding:7px 8px;margin-bottom:6px;">
-        <div style="font-size:10px;color:var(--purple);font-weight:700;">✏️ الصنف / الفئة *</div>
-        <div style="font-size:10px;color:var(--green);font-weight:700;">الموديل / الوصف</div>
+        <div style="font-size:10px;color:var(--green);font-weight:700;">✏️ اسم الصنف / الموديل *</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:700;">الصنف/الفئة</div>
         <div style="font-size:10px;color:var(--yellow);font-weight:700;text-align:center;">الكمية</div>
         <div style="font-size:10px;color:var(--muted);font-weight:700;text-align:center;">سعر الشراء</div>
         <div style="font-size:10px;color:var(--green);font-weight:700;text-align:center;">سعر البيع</div>
@@ -2403,8 +2401,7 @@ function acSelect(fieldId, type, idx, filterCat){
   if(fieldId==='s_model'&&item.data){
     const inv=item.data;
     document.getElementById('s_price').value=inv.sellPrice||0;
-    document.getElementById('s_cat').value=inv.category||'';
-    document.getElementById('s_cat_visible').value=inv.category||'';
+    if(!document.getElementById('s_cat').value) document.getElementById('s_cat').value=inv.category;
     calcSaleTotal();
   }
   if(fieldId==='s_cust'&&item.data){
@@ -2491,7 +2488,7 @@ function addSale(){
   DB.sales.unshift({id:Date.now(),invId,date:nowISO(),customer:defer?custName:'نقدي',custId,category:inv.category,model:inv.name,qty,price,total,paid,remain,saleType,status:saleType==='نقدي'?'مكتمل':calcStat(total,paid)});
   DB.invoices.unshift({id:invId,date:nowISO(),customer:defer?custName:'نقدي',model:inv.name,total,paid,status:saleType==='نقدي'?'مكتمل':calcStat(total,paid)});
   // reset
-  ['s_cust','s_phone','s_cat','s_cat_visible','s_model','s_price','s_discount','s_total','s_remain'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['s_cust','s_phone','s_cat','s_model','s_price','s_discount','s_total','s_remain'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('s_qty').value=1; document.getElementById('s_paid').value=0;
   document.getElementById('s_type').value='نقدي'; onSaleTypeChange();
   saveDB();
@@ -2545,16 +2542,16 @@ function pmAddRow(){
   const div=document.createElement('div');
   div.id='prow_'+id; div.className='prow';
   div.innerHTML=
-    // Col 1: Category with autocomplete (الصنف أولاً)
+    // Col 1: Category with autocomplete
     `<div style="position:relative">
-      <input placeholder="الصنف * (مثال: جوالات)" id="pr_cat_${id}" autocomplete="off"
+      <input placeholder="الصنف / الفئة" id="pr_cat_${id}" autocomplete="off"
         oninput="pmCatAC(${id},this.value)" onblur="setTimeout(()=>acClose('pr_cat_${id}'),200)"
-        style="background:var(--input-bg);border:1.5px solid #a78bfa60;border-radius:7px;padding:7px 9px;color:var(--purple);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;font-weight:700;">
+        style="background:var(--input-bg);border:1px solid #a78bfa40;border-radius:7px;padding:7px 9px;color:var(--purple);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;">
       <div class="ac-list" id="ac_pr_cat_${id}"></div>
     </div>`+
-    // Col 2: Model name with autocomplete (الموديل ثانياً)
+    // Col 2: Model name with autocomplete
     `<div style="position:relative">
-      <input placeholder="الموديل (اختياري)" id="pr_name_${id}" autocomplete="off"
+      <input placeholder="الموديل / الوصف *" id="pr_name_${id}" autocomplete="off"
         oninput="pmRowAC(${id},this.value)" onblur="setTimeout(()=>acClose('pr_name_${id}'),200)"
         style="background:var(--input-bg);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:12px;font-family:Cairo,sans-serif;outline:none;width:100%;text-align:right;">
       <div class="ac-list" id="ac_pr_name_${id}"></div>
@@ -2688,10 +2685,12 @@ function savePurchaseInvoice(){
       const nameVal=(nameEl?nameEl.value:'').trim();
       const catVal=(catEl?catEl.value:'').trim();
 
-      // الصنف إلزامي، الموديل اختياري
-      const category = catVal;
-      if(!category) return; // تجاهل الصفوف بدون صنف
+      // الاسم = pr_name إذا ممتلئ، وإلا pr_cat، وإلا تجاهل
       const name = nameVal || catVal;
+      if(!name) return;
+
+      // الصنف = pr_cat إذا مختلف عن الاسم
+      const category = (catVal && catVal !== name) ? catVal : '—';
       const qty=Math.max(1, parseInt(qtyEl?qtyEl.value:1)||1);
       const buyPrice=parseFloat(buyEl?buyEl.value:0)||0;
       const sellPrice=parseFloat(sellEl?sellEl.value:0)||0;
@@ -2836,6 +2835,7 @@ function addSupplier(){
   if(debt>0){pushLedger(sup.id,'دين','رصيد مبدئي',debt,0);syncBalance(sup.id);}
   ['sup_name','sup_phone','sup_city'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('sup_debt').value=0;
+  saveDB();
   toggleForm('supForm'); renderPage('suppliers');
 }
 function addCustomer(){
@@ -2851,10 +2851,9 @@ function addCustomer(){
   toggleForm('custForm'); renderPage('customers');
 }
 function addInventory(){
-  var cat=(document.getElementById('inv_cat').value||'').trim();
   var name=(document.getElementById('inv_name').value||'').trim();
-  if(!cat){alert('يرجى إدخال الصنف أولاً');return;}
-  if(!name) name=cat;
+  var cat=(document.getElementById('inv_cat').value||'').trim();
+  if(!name||!cat){alert('يرجى إدخال الاسم والصنف');return;}
   var minEl=document.getElementById('inv_min');
   var minV=minEl?+minEl.value:3; if(isNaN(minV)||minV<0)minV=3;
   DB.inventory.push({
@@ -2875,96 +2874,6 @@ function addInventory(){
   renderPage('inventory');
   toast('تمت اضافة '+name+' للمخزون','green');
 }
-// ═══ إكمال تلقائي: الصنف في نموذج البيع ═══
-function sCatFilter(val){
-  var catInput=document.getElementById('s_cat');
-  catInput.value=val;
-  // مسح الموديل عند تغيير الصنف
-  document.getElementById('s_model').value='';
-  document.getElementById('s_price').value='';
-  calcSaleTotal();
-  var listEl=document.getElementById('ac_s_cat_visible');
-  if(!listEl)return;
-  var q=(val||'').trim().toLowerCase();
-  var cats=[...new Set((DB.inventory||[]).filter(i=>i.qty>0).map(i=>i.category))];
-  if(q) cats=cats.filter(c=>c.toLowerCase().indexOf(q)>-1);
-  cats=cats.slice(0,8);
-  if(!cats.length){listEl.classList.remove('open');return;}
-  listEl.innerHTML=cats.map(function(c){
-    var cnt=(DB.inventory||[]).filter(i=>i.category===c&&i.qty>0).length;
-    return '<div class="ac-item" onmousedown="sCatPick(\''+c.replace(/'/g,"\\'")+'\')">'
-      +'<span class="ac-main">'+c+'</span>'
-      +'<span class="ac-sub">'+cnt+' موديل متوفر</span></div>';
-  }).join('');
-  listEl.classList.add('open');
-}
-function sCatPick(cat){
-  document.getElementById('s_cat').value=cat;
-  document.getElementById('s_cat_visible').value=cat;
-  document.getElementById('s_model').value='';
-  document.getElementById('s_price').value='';
-  acClose('s_cat_visible');
-  calcSaleTotal();
-  // فتح قائمة الموديلات تلقائياً
-  setTimeout(function(){
-    document.getElementById('s_model').focus();
-    acSearch('s_model','model',cat);
-  },100);
-}
-
-// ═══ إكمال تلقائي: الصنف في المخزون ═══
-function invCatAC(val){
-  var listEl=document.getElementById('ac_inv_cat');
-  if(!listEl)return;
-  var q=(val||'').trim().toLowerCase();
-  var cats=[...new Set((DB.inventory||[]).map(i=>i.category))];
-  if(q) cats=cats.filter(c=>c.toLowerCase().indexOf(q)>-1);
-  cats=cats.slice(0,8);
-  if(!cats.length){listEl.classList.remove('open');return;}
-  listEl.innerHTML=cats.map(function(c){
-    return '<div class="ac-item" onmousedown="invCatPick(\''+c.replace(/'/g,"\\'")+'\')">'
-      +'<span class="ac-main">'+c+'</span></div>';
-  }).join('');
-  listEl.classList.add('open');
-}
-function invCatPick(cat){
-  document.getElementById('inv_cat').value=cat;
-  acClose('inv_cat');
-  setTimeout(function(){document.getElementById('inv_name').focus();},100);
-}
-
-// ═══ إكمال تلقائي: الموديل في المخزون (مفلتر بالصنف) ═══
-function invNameAC(val){
-  var listEl=document.getElementById('ac_inv_name');
-  if(!listEl)return;
-  var q=(val||'').trim().toLowerCase();
-  if(!q){listEl.classList.remove('open');return;}
-  var cat=(document.getElementById('inv_cat').value||'').trim().toLowerCase();
-  var matches=(DB.inventory||[]).filter(function(i){
-    var nameMatch=i.name&&i.name.toLowerCase().indexOf(q)>-1;
-    var catMatch=!cat||i.category.toLowerCase()===cat;
-    return nameMatch&&catMatch;
-  }).slice(0,8);
-  if(!matches.length){listEl.classList.remove('open');return;}
-  listEl.innerHTML=matches.map(function(i){
-    return '<div class="ac-item" onmousedown="invNamePick('+i.id+')">'
-      +'<span class="ac-main">'+i.name+'</span>'
-      +'<span class="ac-sub">'+i.category+' — مخزون: '+i.qty+'</span></div>';
-  }).join('');
-  listEl.classList.add('open');
-}
-function invNamePick(id){
-  var inv=(DB.inventory||[]).find(function(i){return i.id===id||i.id==id;});
-  if(!inv)return;
-  document.getElementById('inv_name').value=inv.name;
-  document.getElementById('inv_cat').value=inv.category||'';
-  var buyEl=document.getElementById('inv_buy');
-  var sellEl=document.getElementById('inv_sell');
-  if(buyEl&&inv.buyPrice)buyEl.value=inv.buyPrice;
-  if(sellEl&&inv.sellPrice)sellEl.value=inv.sellPrice;
-  acClose('inv_name');
-}
-
 function addReturn(){
   const retType=document.getElementById('ret_type').value;
   const itemName=document.getElementById('ret_item').value.trim()||'—';
@@ -2978,6 +2887,7 @@ function addReturn(){
   }
   DB.returns.unshift({id:Date.now(),date:nowISO(),type:retType,party:document.getElementById('ret_party').value.trim()||'—',category:document.getElementById('ret_cat').value.trim()||'—',item:itemName,qty,amount,reason:document.getElementById('ret_reason').value.trim()||'—',invUpdated:!!inv});
   checkLowStockAlerts();
+  saveDB();
   toggleForm('retForm'); renderPage('returns');
 }
 
@@ -3020,7 +2930,9 @@ function renderModalContent(){
   const receipts=L.filter(x=>x.credit>0);
   document.getElementById('modalReceipts').innerHTML=receipts.length?`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th><th>الرصيد بعد الدفع</th></tr></thead><tbody>${receipts.map(e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td style="color:var(--green);font-weight:700">${fmt(e.credit)} ${CUR}</td><td style="color:var(--yellow)">${fmt(e.balance)} ${CUR}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">لا توجد إيصالات</div>';
 }
+  saveDB();
 function addDebtEntry(){toggleForm('debtEntryForm');}
+  saveDB();
 function addReceiptEntry(){toggleForm('receiptEntryForm');}
 function saveDebtEntry(){
   const desc=document.getElementById('de_desc').value.trim()||'دين جديد', amt=+document.getElementById('de_amt').value||0;
@@ -3029,7 +2941,6 @@ function saveDebtEntry(){
   document.getElementById('de_desc').value=''; document.getElementById('de_amt').value=0;
   document.getElementById('debtEntryForm').classList.remove('open');
   saveDB();
-  _amwajH='';
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
 function saveReceiptEntry(){
@@ -3038,12 +2949,10 @@ function saveReceiptEntry(){
   const e=(activeAccType==='customer'?DB.customers:DB.suppliers).find(x=>x.id===activeAccId);
   if(e&&amt>e.debt&&e.debt>0&&!confirm(`المبلغ (${fmt(amt)}) أكبر من الدين (${fmt(e.debt)}). متابعة؟`))return;
   pushLedger(activeAccId,'دفعة',desc,0,amt); syncBalance(activeAccId);
-  saveDB();
-  _amwajH=''; // إجبار المزامنة الفورية عند جميع المستخدمين
   document.getElementById('re_desc').value=''; document.getElementById('re_amt').value=0;
   document.getElementById('receiptEntryForm').classList.remove('open');
+  saveDB();
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
-  toast('تم حفظ الإيصال وجاري التزامن...','green');
 }
 function settleDebt(id,type){
   const e=(type==='customer'?DB.customers:DB.suppliers).find(x=>x.id===id);
@@ -3128,15 +3037,7 @@ function deleteRow(arr,id,page){
   const idx=arr.findIndex(x=>x.id===id);
   if(idx<0)return;
   if(!confirm('حذف هذا السجل؟'))return;
-  arr.splice(idx,1);
-  // إذا حذفنا مبيعة نحذفها من invoices أيضاً
-  if(page==='sales'){
-    DB.invoices=DB.invoices.filter(function(inv){return inv.id!==id&&!(typeof id==='number'&&typeof inv.id==='string'&&inv.id===String(id));});
-  }
-  saveDB();
-  _amwajH=''; // إجبار اكتشاف التغيير لدى المستخدمين الآخرين
-  renderPage(page);
-  toast('تم الحذف وسيتزامن تلقائياً','green');
+  arr.splice(idx,1); renderPage(page);
 }
 
 function printInvoice(id){
@@ -4075,6 +3976,25 @@ function renderInventoryTable(){
 
 
 
+function saveEditInv(){
+  var id=+document.getElementById('ei_id').value;
+  var inv=DB.inventory.find(function(i){return i.id===id;});
+  if(!inv)return;
+  var name=(document.getElementById('ei_name').value||'').trim();
+  var cat=(document.getElementById('ei_cat').value||'').trim();
+  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
+  inv.name=name; inv.category=cat;
+  inv.qty=+document.getElementById('ei_qty').value||0;
+  inv.buyPrice=+document.getElementById('ei_buy').value||0;
+  inv.sellPrice=+document.getElementById('ei_sell').value||0;
+  inv.minQty=+document.getElementById('ei_min').value||3;
+  saveDB();
+  document.getElementById('editInvModal').classList.remove('open');
+  renderPage('inventory');
+  checkLowStockAlerts();
+  toast('تم تحديث '+name,'green');
+}
+
 function openEditInv(id){
   var inv=DB.inventory.find(function(i){return i.id===id;});
   if(!inv)return;
@@ -4098,20 +4018,12 @@ function openEditInv(id){
     _h.appendChild(_t); _h.appendChild(_c); md.appendChild(_h);
     var _g=document.createElement('div');
     _g.className='form-grid'; _g.style.marginTop='10px';
-    // الصنف أولاً مع إكمال تلقائي ثم الموديل
-    [['ei_cat','الصنف / الفئة *','text'],['ei_name','الموديل / الاسم *','text'],['ei_qty','الكمية','number'],['ei_buy','سعر الشراء','number'],['ei_sell','سعر البيع','number'],['ei_min','حد التنبيه','number']].forEach(function(f){
-      var d=document.createElement('div'); d.className=(f[2]==='text'?'form-group ac-wrap':'form-group');
+    [['ei_name','الاسم *'],['ei_cat','الصنف *'],['ei_qty','الكمية'],['ei_buy','سعر الشراء'],['ei_sell','سعر البيع'],['ei_min','حد التنبيه']].forEach(function(f){
+      var d=document.createElement('div'); d.className='form-group';
       var l=document.createElement('label'); l.textContent=f[1];
-      var inp=document.createElement('input'); inp.id=f[0]; inp.className='pm-inp';
-      if(f[2]==='number'){inp.type='number';inp.min='0';}
-      else {
-        inp.autocomplete='off';
-        if(f[0]==='ei_cat'){inp.setAttribute('oninput','editInvCatAC(this.value)');inp.setAttribute('onblur','setTimeout(function(){acClose("ei_cat");},200)');}
-        else {inp.setAttribute('oninput','editInvNameAC(this.value)');inp.setAttribute('onblur','setTimeout(function(){acClose("ei_name");},200)');}
-        var acDiv=document.createElement('div'); acDiv.className='ac-list'; acDiv.id='ac_'+f[0];
-        d.appendChild(l); d.appendChild(inp); d.appendChild(acDiv); _g.appendChild(d); return;
-      }
-      d.appendChild(l); d.appendChild(inp); _g.appendChild(d);
+      var i=document.createElement('input'); i.id=f[0]; i.className='pm-inp';
+      if(f[0].indexOf('_q')>0||f[0].indexOf('_b')>0||f[0].indexOf('_s')>0||f[0].indexOf('_m')>0){i.type='number';i.min='0';}
+      d.appendChild(l); d.appendChild(i); _g.appendChild(d);
     });
     md.appendChild(_g);
     var _hid=document.createElement('input'); _hid.type='hidden'; _hid.id='ei_id'; md.appendChild(_hid);
@@ -4130,61 +4042,13 @@ function openEditInv(id){
   document.getElementById('ei_min').value=inv.minQty!=null?inv.minQty:3;
   m.classList.add('open');
 }
-// إكمال تلقائي لحقل الصنف في نافذة التعديل
-function editInvCatAC(val){
-  var listEl=document.getElementById('ac_ei_cat');
-  if(!listEl)return;
-  var v=(val||'').trim().toLowerCase();
-  var cats=[...new Set((DB.inventory||[]).map(function(i){return i.category;}))];
-  if(v) cats=cats.filter(function(c){return c.toLowerCase().indexOf(v)>-1;});
-  cats=cats.slice(0,8);
-  if(!cats.length){listEl.classList.remove('open');return;}
-  listEl.innerHTML=cats.map(function(c){
-    return '<div class="ac-item" onmousedown="editInvCatPick(\'' + c.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">' + '<span class="ac-main">' + c + '</span></div>';
-  }).join('');
-  listEl.classList.add('open');
-}
-function editInvCatPick(cat){
-  var el=document.getElementById('ei_cat');
-  if(el) el.value=cat;
-  acClose('ei_cat');
-  // تصفية قائمة الموديل حسب الصنف المختار
-  var nameEl=document.getElementById('ei_name');
-  if(nameEl) editInvNameAC(nameEl.value);
-}
-function editInvNameAC(val){
-  var listEl=document.getElementById('ac_ei_name');
-  if(!listEl)return;
-  var v=(val||'').trim().toLowerCase();
-  var cat=(document.getElementById('ei_cat').value||'').trim().toLowerCase();
-  var matches=(DB.inventory||[]).filter(function(i){
-    var catMatch=!cat||i.category.toLowerCase()===cat;
-    var nameMatch=!v||(i.name&&i.name.toLowerCase().indexOf(v)>-1);
-    return catMatch&&nameMatch;
-  }).slice(0,8);
-  if(!matches.length){listEl.classList.remove('open');return;}
-  listEl.innerHTML=matches.map(function(i){
-    return '<div class="ac-item" onmousedown="editInvNamePick('+i.id+')">'
-      +'<span class="ac-main">'+i.name+'</span>'
-      +'<span class="ac-sub">'+i.category+' — مخزون: '+i.qty+'</span></div>';
-  }).join('');
-  listEl.classList.add('open');
-}
-function editInvNamePick(id){
-  var inv=(DB.inventory||[]).find(function(i){return i.id===id||i.id==id;});
-  if(!inv)return;
-  document.getElementById('ei_name').value=inv.name;
-  acClose('ei_name');
-}
-
 function saveEditInv(){
   var id=+document.getElementById('ei_id').value;
   var inv=DB.inventory.find(function(i){return i.id===id;});
   if(!inv)return;
   var name=(document.getElementById('ei_name').value||'').trim();
   var cat=(document.getElementById('ei_cat').value||'').trim();
-  if(!cat){alert('يرجى إدخال الصنف');return;}
-  if(!name) name=cat; // إذا لم يدخل الموديل يستخدم الصنف بدلاً
+  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
   inv.name=name; inv.category=cat;
   inv.qty=+document.getElementById('ei_qty').value||0;
   inv.buyPrice=+document.getElementById('ei_buy').value||0;
@@ -4340,122 +4204,7 @@ function renderReports(){
 const SAVE_KEY='amwaj_db_v3';
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
-  // Firebase SDK يتولى الرفع عبر patchSaveDB — لا نستدعي amwajPush هنا
-  // (patchSaveDB تستبدل هذه الدالة عند تسجيل الدخول)
-}
-
-var _amwajURL='https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json';
-var _amwajT=null;
-var _amwajH='';
-
-function _amwajSB(s,c){var e=document.getElementById('_SB');if(!e)return;e.textContent=s;e.style.color=c||'#ffc23e';}
-
-function amwajPush(){
-  // إذا Firebase SDK متاح، يتولى هو المزامنة — لا نستخدم REST
-  if(window._fbOK && window._fbRef){ _amwajSB('🟢 مباشر','#00e5a0'); return; }
-  if(!navigator.onLine){_amwajSB('🔴 لا إنترنت','#ff4d6d');return;}
-  _amwajSB('⬆ رفع...','#00c8ff');
-  fetch(_amwajURL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
-  .then(function(r){_amwajSB(r.ok?'🟢 مباشر':'🔴 خطأ '+r.status,r.ok?'#00e5a0':'#ff4d6d');})
-  .catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
-}
-
-function amwajPull(){
-  // polling خفيف — Firebase SDK يتولى التحديث الفوري
-  if(window._fbOK && window._fbRef){
-    // Firebase SDK listener يعمل تلقائياً — لا نتدخل
-    return;
-  }
-  if(!navigator.onLine)return;
-  fetch(_amwajURL)
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
-    var h=JSON.stringify(d);
-    if(h===_amwajH){_amwajSB('🟢 مباشر','#00e5a0');return;}
-    _amwajH=h;
-    var changed=false;
-    ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-     'ledger','users','config','keys','salaries','expenses','withdrawals',
-     'salesDeductions','balanceRecords','stockLedger'].forEach(function(k){
-      if(d[k]!==undefined&&JSON.stringify(d[k])!==JSON.stringify(DB[k])){DB[k]=d[k];changed=true;}
-    });
-    if(changed){
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-      // تحديث USERS
-      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){var m=USERS.find(function(x){return x.username===u.login;});if(m){m.password=u.pass;m.role=u.role;}else{USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});}});}}catch(e){}
-      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-      try{if(typeof renderDashboard==='function'&&document.getElementById('page-dashboard')&&document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();}catch(e){}
-      _amwajSB('🟢 مباشر','#00e5a0');
-    } else {_amwajSB('🟢 مباشر','#00e5a0');}
-  })
-  .catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
-}
-
-function forceSync(){ amwajForcePull(); }
-function amwajSync(){ amwajForcePull(); }
-function amwajForcePull(){
-  // جلب البيانات من Firebase فوراً بغض النظر عن الـ hash
-  _amwajH = '';
-  if(window._fbOK && window._fbRef){
-    _amwajSB('⇪ جلب...','#00c8ff');
-    window._fbRef.once('value').then(function(snap){
-      var d = snap.val();
-      if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
-      var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices',
-        'ledger','users','config','keys','salesDeductions','balanceRecords',
-        'stockLedger','withdrawals','employees','rentItems','expHistory'];
-      keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){var m=USERS.find(function(x){return x.username===u.login;});if(m){m.password=u.pass;m.role=u.role;}else{USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});}});}}catch(e){}
-      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-      try{if(typeof renderDashboard==='function'){var dash=document.getElementById('page-dashboard');if(dash&&dash.classList.contains('active'))renderDashboard();}}catch(e){}
-      _amwajSB('🟢 مباشر','#00e5a0');
-    }).catch(function(){_amwajSB('🔴 خطأ','#ff4d6d');});
-  } else {
-    // Fallback REST
-    if(!navigator.onLine){_amwajSB('🔴 لا إنترنت','#ff4d6d');return;}
-    _amwajSB('⇪ جلب...','#00c8ff');
-    fetch(_amwajURL)
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(!d){_amwajSB('🟢 مباشر','#00e5a0');return;}
-      var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices',
-        'ledger','users','config','keys','salesDeductions'];
-      keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
-      try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-      _amwajSB('🟢 مباشر','#00e5a0');
-    }).catch(function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
-  }
-}
-
-function amwajManualPush(){
-  // رفع يدوي صريح — فقط عند طلب المستخدم
-  if(!navigator.onLine){toast('🔴 لا يوجد اتصال بالإنترنت','red');return;}
-  if(window._fbOK && window._fbRef){
-    _amwajSB('⬆ رفع...','#00c8ff');
-    var snapshot=JSON.parse(JSON.stringify(DB));
-    window._fbRef.set(snapshot)
-    .then(function(){
-      _amwajSB('🟢 مباشر','#00e5a0');
-      toast('✅ تم رفع البيانات بنجاح','green');
-    })
-    .catch(function(){_amwajSB('🔴 فشل','#ff4d6d');toast('خطأ في الرفع','red');});
-  } else {
-    fetch(_amwajURL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)})
-    .then(function(r){
-      if(r.ok){_amwajSB('🟢 مباشر','#00e5a0');toast('✅ تم الرفع','green');}
-      else{_amwajSB('🔴 خطأ','#ff4d6d');}
-    }).catch(function(){_amwajSB('🔴 خطأ','#ff4d6d');});
-  }
-}
-
-function amwajStart(){
-  // عند البداية: اجلب أولاً ثم ابدأ polling — لا ترفع
-  amwajForcePull();
-  if(_amwajT)clearInterval(_amwajT);
-  _amwajT=setInterval(amwajPull,800);
+  if(typeof _doSync==='function')_doSync();
 }
 function loadDB(){
   try{
@@ -4639,6 +4388,7 @@ function addUser(){
   if(DB.users.find(u=>u.login===login)){toast('⚠ اسم الدخول مستخدم مسبقاً','yellow');return;}
   DB.users.push({id:Date.now(),name,login,pass,role,active:true,created:todayISO()});
   ['u_name','u_login','u_pass'].forEach(id=>document.getElementById(id).value='');
+  saveDB();
   toggleForm('addUserForm');
   renderUsersTable(); renderChangePassUser();
   toast('✅ تمت إضافة المستخدم بنجاح','green');
@@ -4864,18 +4614,12 @@ function fullSystemReset(){
 function dangerOp(type){
   const msgs={sales:'حذف جميع سجلات المبيعات؟',purchases:'حذف جميع سجلات المشتريات؟',debts:'مسح جميع الديون وأرصدة الحسابات؟',all:'⚠ إعادة ضبط النظام بالكامل؟ سيُحذف كل شيء!'};
   if(!confirm(msgs[type])) return;
-  if(type==='sales'){DB.sales=[];DB.salesDeductions=[];DB.invoices=[];}
-  else if(type==='purchases'){DB.purchases=[];}
+  if(type==='sales') DB.sales=[];
+  else if(type==='purchases') DB.purchases=[];
   else if(type==='debts'){DB.ledger={};DB.customers.forEach(c=>c.debt=0);DB.suppliers.forEach(s=>s.debt=0);}
-  else if(type==='all'){['sales','purchases','customers','suppliers','inventory','returns','invoices'].forEach(k=>DB[k]=[]);DB.ledger={};DB.salesDeductions=[];}
-  // حفظ ورفع فوري لضمان التزامن مع جميع المستخدمين
-  saveDB();
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-  // إجبار إعادة pull فوري لتفعيل التغيير عند المستخدمين الآخرين
-  _amwajH=''; // إعادة تعيين hash لضمان اكتشاف التغيير
-  setTimeout(function(){amwajPull();},300);
+  else if(type==='all'){['sales','purchases','customers','suppliers','inventory','returns','invoices'].forEach(k=>DB[k]=[]);DB.ledger={};}
   renderSysInfo(); renderDashboard();
-  toast('✅ تمت العملية - جاري التزامن...','green');
+  toast('✅ تمت العملية بنجاح','green');
 }
 
 // Backup
@@ -4910,6 +4654,7 @@ function saveBizConfig(){
   DB.config.phone=document.getElementById('cfg_phone').value.trim();
   DB.config.address=document.getElementById('cfg_addr').value.trim();
   DB.config.currency=document.getElementById('cfg_cur').value;
+  saveDB();
   toast('✅ تم حفظ بيانات المنشأة','green');
 }
 
@@ -5032,7 +4777,7 @@ function tryLogin(){
   const dash=document.getElementById('page-dashboard');
   if(dash){ dash.classList.add('active'); }
   renderDashboard();
-  amwajStart();
+  setTimeout(function(){if(typeof _startSync==='function')_startSync();},300);
   // تحديث ROLE_PAGES ليشمل الصفحات الجديدة
   const dbUser2=(DB.users||[]).find(u=>u.login===currentUser.username);
   const role2=dbUser2?dbUser2.role:'مدير';
@@ -5300,16 +5045,6 @@ var _fbDB  = null;
 var _fbRef = null;
 var _fbOK  = false;
 var _fbIgnoreNext = false;
-// معرف فريد لكل جهاز
-if(!window._deviceId){
-  try{
-    window._deviceId = localStorage.getItem('_amwaj_device_id');
-    if(!window._deviceId){
-      window._deviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
-      localStorage.setItem('_amwaj_device_id', window._deviceId);
-    }
-  }catch(e){ window._deviceId = 'dev_' + Date.now(); }
-}
 
 function fbInit(){
   try{
@@ -5323,51 +5058,23 @@ function fbInit(){
     _fbRef = _fbDB.ref('amwaj_db');
     _fbOK  = true;
 
-    // ═══ Listener الرئيسي — يستقبل كل تغيير من أي جهاز ═══
+    // استمع للتغييرات الفورية
     _fbRef.on('value', function(snap){
+      // تجاهل تام أثناء الحفظ أو خلال فترة الحماية
+      if(_fbSaving) return;
+      if(_fbIgnoreNext){ _fbIgnoreNext=false; return; }
+      if(Date.now() < _fbIgnoreUntil) return;
       var d = snap.val();
       if(!d) return;
-
-      // إذا كنا نحفظ الآن وهذه البيانات من جهازنا — تجاهل
-      if(_fbSaving && d._lastDevice === (window._deviceId||'unknown')) return;
-
-      var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-        'ledger','users','config','keys','salesDeductions','balanceRecords',
-        'stockLedger','withdrawals','employees','rentItems','expHistory'];
-      var changed = false;
-      keys.forEach(function(k){
-        if(d[k]!==undefined && JSON.stringify(d[k])!==JSON.stringify(DB[k])){
-          DB[k]=d[k]; changed=true;
-        }
-      });
-
-      // حفظ محلي
+      var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices','ledger','users','config','keys'];
+      keys.forEach(function(k){ if(d[k]!==undefined) DB[k]=d[k]; });
       try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-
-      // تحديث USERS
-      try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
-        var m=USERS.find(function(x){return x.username===u.login;});
-        if(m){m.password=u.pass;m.role=u.role;}
-        else USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});
-      });}}catch(e){}
-
-      // تحديث الواجهة دائماً عند وجود تغيير
-      if(changed){
-        try{
-          var page=document.querySelector('.page.active');
-          if(page) renderPage(page.id.replace('page-',''));
-        }catch(e){}
-        try{
-          if(typeof renderDashboard==='function'){
-            var dash=document.getElementById('page-dashboard');
-            if(dash&&dash.classList.contains('active')) renderDashboard();
-          }
-        }catch(e){}
-      }
+      // تحديث الواجهة
+      try{
+        var page = document.querySelector('.page.active');
+        if(page) renderPage(page.id.replace('page-',''));
+      }catch(e){}
       fbStatus('live');
-    }, function(err){
-      console.error('Firebase listener error:', err);
-      fbStatus('offline');
     });
 
     // مراقبة الاتصال والمزامنة التلقائية
@@ -5407,8 +5114,14 @@ function fbInit(){
 }
 
 
-// ── Firebase SDK يتولى المزامنة الفورية تلقائياً ──
-// لا نحتاج polling دوري للرفع
+// ── مزامنة دورية كل 30 ثانية ──
+setInterval(function(){
+  try{
+    if(window._fbOK && window._fbRef && navigator.onLine){
+      if(typeof saveDB==='function') saveDB();
+    }
+  }catch(e){}
+}, 30000);
 
 function fbStatus(s){
   var el = document.getElementById('_fbBadge');
@@ -5430,25 +5143,25 @@ var _fbIgnoreUntil = 0;
 var _fbSaving = false;
 
 function patchSaveDB(){
+  _origSaveDB = window.saveDB;
   window.saveDB = function(){
     // حفظ محلي فوري
     try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-    // رفع Firebase — بدون أي حجب أو تجاهل
+    // رفع Firebase مع حماية من overwrite
     if(_fbRef && _fbOK){
       _fbSaving = true;
-      // أضف timestamp لضمان الفوز بآخر نسخة
-      DB._lastUpdate = Date.now();
-      DB._lastDevice = window._deviceId || 'unknown';
+      _fbIgnoreNext = true;
+      _fbIgnoreUntil = Date.now() + 5000;
       var snapshot = JSON.parse(JSON.stringify(DB));
       _fbRef.set(snapshot)
         .then(function(){
+          fbStatus('saved');
           _fbSaving = false;
-          fbStatus('live');
+          setTimeout(function(){ fbStatus('live'); }, 2000);
         })
-        .catch(function(e){
-          _fbSaving = false;
+        .catch(function(){
           fbStatus('offline');
-          console.warn('Firebase push failed:', e);
+          _fbSaving = false;
         });
     }
   };
@@ -5466,29 +5179,12 @@ window.addEventListener('load', function(){
         setTimeout(function(){
           fbInit();
           patchSaveDB();
-          // اجلب البيانات من Firebase فوراً بعد الدخول
+          // رفع البيانات الموجودة
           if(_fbRef && _fbOK){
             _fbRef.once('value').then(function(snap){
-              var d = snap.val();
-              if(!d){
+              if(!snap.val()){
                 // قاعدة فارغة — ارفع البيانات المحلية
                 window.saveDB();
-              } else {
-                // Firebase يملك بيانات — استبدل المحلية بها دائماً
-                var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices',
-                  'ledger','users','config','keys','salesDeductions','balanceRecords',
-                  'stockLedger','withdrawals','employees','rentItems','expHistory'];
-                keys.forEach(function(k){ if(d[k]!==undefined) DB[k]=d[k]; });
-                try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-                try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
-                  var m=USERS.find(function(x){return x.username===u.login;});
-                  if(m){m.password=u.pass;m.role=u.role;}
-                  else USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});
-                });}}catch(e){}
-                try{renderDashboard();}catch(e){}
-                try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-                fbStatus('live');
-                console.log('✅ تم جلب البيانات من Firebase عند الدخول');
               }
             });
           }
@@ -7509,8 +7205,6 @@ function _sb(s,c){
 }
 
 function _doSync(){
-  // إذا Firebase SDK متاح يتولى الرفع — لا نتدخل
-  if(window._fbOK && window._fbRef){ return; }
   if(!navigator.onLine){_sb('🔴 لا إنترنت','#ff4d6d');return;}
   _sb('⬆ رفع...','#00c8ff');
   try{
@@ -7564,26 +7258,20 @@ function _doPull(){
 }
 
 function _startSync(){
-  // يجلب فقط — لا يرفع
-  _doPull();
+  _doSync();
   if(_sT)clearInterval(_sT);
-  _sT=setInterval(_doPull,1500);
+  _sT=setInterval(_doPull,5000);
 }
 
 
 window.addEventListener('online',function(){
-  // عودة الإنترنت: اجلب البيانات فقط
-  if(typeof amwajForcePull==='function') amwajForcePull();
-  else if(typeof _doPull==='function') _doPull();
-  try{toast('📶 الإنترنت عاد - جاري الجلب...','green');}catch(e){}
+  if(typeof _startSync==='function')_startSync();
+  try{toast('📶 تمت المزامنة','green');}catch(e){}
 });
 window.addEventListener('offline',function(){
   if(typeof _sb==='function')_sb('🔴 لا إنترنت','#ff4d6d');
 });
 
-
-// online handler موحد أعلاه
-window.addEventListener('offline',function(){_amwajSB('🔴 لا إنترنت','#ff4d6d');});
 </script>
 
 <!-- ══ مودال تغيير كلمة المرور ══ -->
