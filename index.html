@@ -804,8 +804,8 @@ tr:hover td{background:var(--td-hover);}
       </div>
       <div class="add-form" id="invForm">
         <div class="form-grid">
-          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: جوالات - Samsung A55"></div>
-          <input id="inv_cat" type="hidden" value="">
+          <div class="form-group"><label>الصنف / الفئة *</label><input id="inv_cat" placeholder="مثال: جوالات، لابتوب..." autocomplete="off"></div>
+          <div class="form-group"><label>الموديل / الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;" title="مسح باركود">📷</button></label><input id="inv_name" placeholder="مثال: Samsung A55" autocomplete="off"></div>
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر البيع (ر.ي) *</label><input id="inv_sell" type="number" value="0" min="0"></div>
@@ -2949,9 +2949,20 @@ function renderModalContent(){
     {l:'إجمالي المدفوع',v:fmt(totC)+' '+CUR,c:'var(--green)'},
     {l:'عدد الحركات',v:L.length,c:'var(--purple)'},
   ].map(s=>`<div class="stat-card" style="background:${s.c}0d;border-color:${s.c}30;flex:1;min-width:90px;"><div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join('');
-  const ledgerRow=e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td>${sBadge(e.type)}</td><td style="color:var(--red);font-weight:600">${e.debit>0?fmt(e.debit)+' '+CUR:'—'}</td><td style="color:var(--green);font-weight:600">${e.credit>0?fmt(e.credit)+' '+CUR:'—'}</td><td style="color:${e.balance>0?'var(--yellow)':'var(--green)'};font-weight:700">${fmt(e.balance)} ${CUR}</td></tr>`;
-  const thead=`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead><tbody>`;
-  document.getElementById('modalLedger').innerHTML=L.length?thead+L.map(ledgerRow).join('')+'</tbody></table>':'<div class="empty-state">لا توجد حركات</div>';
+  const ledgerRow=(e,idx)=>`<tr>
+    <td>${e.date}</td>
+    <td>${e.desc}</td>
+    <td>${sBadge(e.type)}</td>
+    <td style="color:var(--red);font-weight:600">${e.debit>0?fmt(e.debit)+' '+CUR:'—'}</td>
+    <td style="color:var(--green);font-weight:600">${e.credit>0?fmt(e.credit)+' '+CUR:'—'}</td>
+    <td style="color:${e.balance>0?'var(--yellow)':'var(--green)'};font-weight:700">${fmt(e.balance)} ${CUR}</td>
+    <td style="white-space:nowrap">
+      <button onclick="editLedgerEntry(${activeAccId},${idx})" style="background:#00c8ff15;border:1px solid #00c8ff40;border-radius:5px;color:#00c8ff;cursor:pointer;padding:2px 7px;font-size:11px;font-family:Cairo,sans-serif;">✏</button>
+      <button onclick="deleteLedgerEntry(${activeAccId},${idx})" style="background:#ff4d6d15;border:1px solid #ff4d6d40;border-radius:5px;color:#ff4d6d;cursor:pointer;padding:2px 7px;font-size:11px;font-family:Cairo,sans-serif;">🗑</button>
+    </td>
+  </tr>`;
+  const thead=`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>مدين</th><th>دائن</th><th>الرصيد</th><th>إجراء</th></tr></thead><tbody>`;
+  document.getElementById('modalLedger').innerHTML=L.length?thead+L.map((e,i)=>ledgerRow(e,i)).join('')+'</tbody></table>':'<div class="empty-state">لا توجد حركات</div>';
   const debits=L.filter(x=>x.debit>0);
   document.getElementById('modalDebts').innerHTML=debits.length?`<table><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th></tr></thead><tbody>${debits.map(e=>`<tr><td>${e.date}</td><td>${e.desc}</td><td style="color:var(--red);font-weight:700">${fmt(e.debit)} ${CUR}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">لا توجد ديون</div>';
   const receipts=L.filter(x=>x.credit>0);
@@ -2979,6 +2990,52 @@ function saveReceiptEntry(){
   document.getElementById('receiptEntryForm').classList.remove('open');
   renderModalContent(); renderPage(activeAccType==='customer'?'debts':'supDebts');
 }
+// ═══ حذف وتعديل حركات الدفتر ═══
+function deleteLedgerEntry(accId, entryIdx){
+  if(!confirm('حذف هذه الحركة؟ سيتم إعادة حساب الرصيد'))return;
+  var L=getLedger(accId);
+  if(entryIdx<0||entryIdx>=L.length)return;
+  L.splice(entryIdx,1);
+  // إعادة حساب الأرصدة المتراكمة
+  var running=0;
+  L.forEach(function(e){
+    running += e.debit - e.credit;
+    e.balance = running;
+  });
+  syncBalance(accId);
+  saveDB();
+  renderModalContent();
+  renderPage(activeAccType==='customer'?'debts':'supDebts');
+  toast('تم الحذف وإعادة حساب الرصيد','green');
+}
+
+function editLedgerEntry(accId, entryIdx){
+  var L=getLedger(accId);
+  if(entryIdx<0||entryIdx>=L.length)return;
+  var entry=L[entryIdx];
+  var newDesc=prompt('البيان:',entry.desc);
+  if(newDesc===null)return;
+  var newAmt=prompt(entry.debit>0?'المبلغ المدين:':'المبلغ الدائن:',
+    entry.debit>0?entry.debit:entry.credit);
+  if(newAmt===null)return;
+  var amt=parseFloat(newAmt)||0;
+  if(amt<=0){alert('أدخل مبلغاً صحيحاً');return;}
+  entry.desc=newDesc.trim()||entry.desc;
+  if(entry.debit>0) entry.debit=amt;
+  else entry.credit=amt;
+  // إعادة حساب الأرصدة
+  var running=0;
+  L.forEach(function(e){
+    running += e.debit - e.credit;
+    e.balance = running;
+  });
+  syncBalance(accId);
+  saveDB();
+  renderModalContent();
+  renderPage(activeAccType==='customer'?'debts':'supDebts');
+  toast('تم التعديل','green');
+}
+
 function settleDebt(id,type){
   const e=(type==='customer'?DB.customers:DB.suppliers).find(x=>x.id===id);
   if(!e||e.debt<=0)return;
@@ -3999,25 +4056,6 @@ function renderInventoryTable(){
 }
 
 
-
-function saveEditInv(){
-  var id=+document.getElementById('ei_id').value;
-  var inv=DB.inventory.find(function(i){return i.id===id;});
-  if(!inv)return;
-  var name=(document.getElementById('ei_name').value||'').trim();
-  var cat=(document.getElementById('ei_cat').value||'').trim();
-  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
-  inv.name=name; inv.category=cat;
-  inv.qty=+document.getElementById('ei_qty').value||0;
-  inv.buyPrice=+document.getElementById('ei_buy').value||0;
-  inv.sellPrice=+document.getElementById('ei_sell').value||0;
-  inv.minQty=+document.getElementById('ei_min').value||3;
-  saveDB();
-  document.getElementById('editInvModal').classList.remove('open');
-  renderPage('inventory');
-  checkLowStockAlerts();
-  toast('تم تحديث '+name,'green');
-}
 
 function openEditInv(id){
   var inv=DB.inventory.find(function(i){return i.id===id;});
