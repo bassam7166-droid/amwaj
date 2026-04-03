@@ -4188,7 +4188,7 @@ function openEditInv(id){
       var d=document.createElement('div'); d.className='form-group';
       var l=document.createElement('label'); l.textContent=f[1];
       var i=document.createElement('input'); i.id=f[0]; i.className='pm-inp';
-      if(f[0].indexOf('_q')>0||f[0].indexOf('_b')>0||f[0].indexOf('_s')>0||f[0].indexOf('_m')>0){i.type='number';i.min='0';}
+      if(f[0]==='ei_qty'||f[0]==='ei_buy'||f[0]==='ei_sell'||f[0]==='ei_min'){i.type='number';i.min='0';}
       d.appendChild(l); d.appendChild(i); _g.appendChild(d);
     });
     md.appendChild(_g);
@@ -4198,6 +4198,7 @@ function openEditInv(id){
     var _cn=document.createElement('button'); _cn.className='btn btn-gray'; _cn.textContent='الغاء'; _cn.style.cssText='padding:10px 16px;font-family:Cairo,sans-serif;'; _cn.onclick=function(){document.getElementById('editInvModal').classList.remove('open');};
     _btns.appendChild(_sv); _btns.appendChild(_cn); md.appendChild(_btns);
     m.appendChild(md);
+    document.body.appendChild(m);
   }
   document.getElementById('ei_id').value=id;
   document.getElementById('ei_cat').value=inv.category||'';
@@ -4369,6 +4370,98 @@ function renderReports(){
 // SAVE / LOAD (localStorage)
 // ═══════════════════════════════════════
 const SAVE_KEY='amwaj_db_v3';
+// ═══ دمج ذكي: يأخذ الأحدث دائماً ═══
+function mergeDBWithFirebase(remote){
+  if(!remote) return false;
+  var changed = false;
+  // المفاتيح التي تُدمج بالضم (arrays)
+  var arrayKeys = ['sales','purchases','returns','invoices','salesDeductions',
+                   'balanceRecords','stockLedger','withdrawals','employees','rentItems','expHistory'];
+  // المفاتيح التي تُؤخذ الأحدث منها كاملاً
+  var objectKeys = ['suppliers','customers','inventory','users','config','keys','ledger'];
+
+  arrayKeys.forEach(function(k){
+    var local = DB[k] || [];
+    var rem = remote[k] || [];
+    if(!rem.length) return;
+    if(!local.length){ DB[k]=rem; changed=true; return; }
+    // دمج: أضف العناصر الموجودة في remote وغير موجودة في local
+    var localIds = new Set(local.map(function(x){return x.id;}));
+    var toAdd = rem.filter(function(x){return x.id && !localIds.has(x.id);});
+    if(toAdd.length){
+      DB[k] = local.concat(toAdd).sort(function(a,b){
+        return (b.id||0)-(a.id||0);
+      });
+      changed = true;
+    }
+  });
+
+  objectKeys.forEach(function(k){
+    if(remote[k]===undefined) return;
+    var remStr = JSON.stringify(remote[k]);
+    var locStr = JSON.stringify(DB[k]);
+    if(remStr === locStr) return;
+    // للـ customers/suppliers: دمج الديون من كلاهما
+    if(k==='customers'||k==='suppliers'){
+      var rem = remote[k]||[];
+      var local = DB[k]||[];
+      var merged = JSON.parse(JSON.stringify(local));
+      rem.forEach(function(rItem){
+        var lItem = merged.find(function(x){return x.id===rItem.id;});
+        if(!lItem){
+          merged.push(rItem);
+        } else {
+          // أبقِ الأكبر ديناً (الأحدث بياناً)
+          if(rItem.debt > lItem.debt) lItem.debt = rItem.debt;
+          if(rItem.phone && !lItem.phone) lItem.phone = rItem.phone;
+        }
+      });
+      DB[k] = merged;
+    } else if(k==='ledger'){
+      // دمج الدفاتر: أضف الحركات من remote غير الموجودة محلياً
+      var remLedger = remote[k]||{};
+      if(!DB.ledger) DB.ledger={};
+      Object.keys(remLedger).forEach(function(accId){
+        var remEntries = remLedger[accId]||[];
+        var localEntries = DB.ledger[accId]||[];
+        if(!localEntries.length){ DB.ledger[accId]=remEntries; return; }
+        // دمج بـ date+desc كمفتاح
+        var localSigs = new Set(localEntries.map(function(e){return e.date+'_'+e.debit+'_'+e.credit;}));
+        var toAdd = remEntries.filter(function(e){
+          return !localSigs.has(e.date+'_'+e.debit+'_'+e.credit);
+        });
+        if(toAdd.length){
+          DB.ledger[accId] = localEntries.concat(toAdd);
+          // إعادة حساب الأرصدة
+          var running=0;
+          DB.ledger[accId].forEach(function(e){
+            running += e.debit - e.credit;
+            e.balance = running;
+          });
+        }
+      });
+    } else if(k==='inventory'){
+      var remInv = remote[k]||[];
+      var locInv = DB[k]||[];
+      if(!locInv.length){ DB[k]=remInv; changed=true; return; }
+      var locIds = new Set(locInv.map(function(x){return x.id;}));
+      remInv.forEach(function(rItem){
+        if(!locIds.has(rItem.id)){
+          locInv.push(rItem);
+        } else {
+          var lItem = locInv.find(function(x){return x.id===rItem.id;});
+          if(lItem && rItem.qty > lItem.qty) lItem.qty = rItem.qty;
+        }
+      });
+    } else {
+      DB[k] = remote[k];
+    }
+    changed = true;
+  });
+
+  return changed;
+}
+
 function saveDB(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){console.warn('save failed',e);}
   // رفع Firebase
@@ -4416,8 +4509,27 @@ function amwajPull(){
 }
 
 function amwajSync(){
-  amwajPush();
-  amwajPull();
+  // عند الضغط على مزامنة: اجلب أولاً وادمج، ثم ارفع
+  if(window._fbRef && window._fbOK){
+    _amwajSB('⟳ دمج...','#00c8ff');
+    window._fbRef.once('value').then(function(snap){
+      var remote = snap.val();
+      if(remote && typeof mergeDBWithFirebase==='function'){
+        mergeDBWithFirebase(remote);
+        try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+      }
+      // ارفع النسخة المدمجة
+      window.saveDB();
+      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+      try{renderDashboard&&renderDashboard();}catch(e){}
+      toast('✅ تم الدمج والرفع','green');
+    }).catch(function(){
+      window.saveDB();
+    });
+  } else {
+    amwajPush();
+    amwajPull();
+  }
 }
 
 function amwajStart(){
@@ -5283,14 +5395,24 @@ function fbInit(){
       if(Date.now() < _fbIgnoreUntil) return;
       var d = snap.val();
       if(!d) return;
-      var keys = ['sales','purchases','suppliers','customers','inventory','returns','invoices','ledger','users','config','keys'];
-      keys.forEach(function(k){ if(d[k]!==undefined) DB[k]=d[k]; });
-      try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-      // تحديث الواجهة
-      try{
-        var page = document.querySelector('.page.active');
-        if(page) renderPage(page.id.replace('page-',''));
-      }catch(e){}
+      // استخدم الدمج الذكي بدلاً من الكتابة فوق
+      if(typeof mergeDBWithFirebase === 'function'){
+        var merged = mergeDBWithFirebase(d);
+        if(merged){
+          try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
+          // تحديث USERS
+          try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
+            var m=USERS.find(function(x){return x.username===u.login;});
+            if(m){m.password=u.pass;m.role=u.role;}
+          });}}catch(e){}
+          try{var page=document.querySelector('.page.active');if(page)renderPage(page.id.replace('page-',''));}catch(e){}
+        }
+      } else {
+        var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices','ledger','users','config','keys'];
+        keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
+        try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+        try{var page=document.querySelector('.page.active');if(page)renderPage(page.id.replace('page-',''));}catch(e){}
+      }
       fbStatus('live');
     });
 
@@ -5331,14 +5453,24 @@ function fbInit(){
 }
 
 
-// ── مزامنة دورية كل 30 ثانية ──
+// ── جلب دوري كل 8 ثوانٍ — دمج فقط بدون رفع تلقائي ──
 setInterval(function(){
   try{
-    if(window._fbOK && window._fbRef && navigator.onLine){
-      if(typeof saveDB==='function') saveDB();
+    if(window._fbOK && window._fbRef && navigator.onLine && !_fbSaving){
+      window._fbRef.once('value').then(function(snap){
+        var remote=snap.val();
+        if(!remote) return;
+        if(typeof mergeDBWithFirebase==='function'){
+          var ch=mergeDBWithFirebase(remote);
+          if(ch){
+            try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+            try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+          }
+        }
+      }).catch(function(){});
     }
   }catch(e){}
-}, 30000);
+}, 8000);
 
 function fbStatus(s){
   var el = document.getElementById('_fbBadge');
@@ -5399,10 +5531,35 @@ window.addEventListener('load', function(){
           // رفع البيانات الموجودة
           if(_fbRef && _fbOK){
             _fbRef.once('value').then(function(snap){
-              if(!snap.val()){
+              var remote = snap.val();
+              if(!remote){
                 // قاعدة فارغة — ارفع البيانات المحلية
                 window.saveDB();
+              } else {
+                // دائماً ادمج Firebase مع المحلي — لا تكتب فوق
+                var changed = mergeDBWithFirebase(remote);
+                if(changed){
+                  try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+                  // ارفع النسخة المدمجة
+                  _fbRef.set(JSON.parse(JSON.stringify(DB))).catch(function(){});
+                  // حدّث الواجهة
+                  try{renderDashboard&&renderDashboard();}catch(e){}
+                  try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+                  fbStatus('live');
+                  toast('✅ تمت المزامنة والدمج','green');
+                } else {
+                  fbStatus('live');
+                }
+                // تحديث USERS
+                try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
+                  var m=USERS.find(function(x){return x.username===u.login;});
+                  if(m){m.password=u.pass;m.role=u.role;}
+                  else USERS.push({username:u.login,password:u.pass,name:u.name,role:u.role,avatar:u.name?u.name[0]:'م'});
+                });}}catch(e){}
               }
+            }).catch(function(e){
+              console.warn('Firebase fetch error:', e);
+              fbStatus('local');
             });
           }
         }, 500);
@@ -5504,7 +5661,7 @@ function balSaveState(){
    'bal_daily_sales','bal_balance_remain','bal_sabafon_remain','bal_expense_now','bal_cash_now'
   ].forEach(function(id){
     var el=document.getElementById(id);
-    if(el&&el.value&&+el.value!==0)fields[id]=el.value;
+    if(el&&el.value!==undefined&&el.value!=='')fields[id]=el.value;
   });
   DB.config.balToday={
     date:todayISO(),
@@ -5542,11 +5699,29 @@ function balRenderRecords(){const el=document.getElementById('balRecordsTable');
 function balDeleteRecord(id){if(!confirm('حذف؟'))return;DB.balanceRecords=(DB.balanceRecords||[]).filter(r=>r.id!==id);saveDB();balRenderRecords();}
 function renderBalancePage(){
   var today=todayISO(),saved=DB.config&&DB.config.balToday;
-  if(saved&&saved.date===today){
+  var hasToday = saved && saved.date===today;
+  if(hasToday){
     balDebts=saved.debts||[];balReceived=saved.received||[];balExpenses=saved.expenses||[];
-    if(saved.fields)Object.keys(saved.fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=saved.fields[id];});
-  }else{balDebts=[];balReceived=[];balExpenses=[];}
-  balRenderDebts();balRenderReceived();balRenderExpenses();balLoadNextDay();balRenderRecords();balCalc();
+    // حمّل الحقول المحفوظة اليوم
+    if(saved.fields) Object.keys(saved.fields).forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.value=saved.fields[id];
+    });
+    // حمّل balNextDay فقط للحقول التي لم تُحفظ اليوم بعد
+    var nd=DB.config&&DB.config.balNextDay;
+    if(nd){
+      ['bal_balance_open','bal_sabafon_open','bal_expense_open'].forEach(function(id){
+        var el=document.getElementById(id);
+        var alreadySet = saved.fields && saved.fields[id] && +saved.fields[id]!==0;
+        if(el && nd[id]!==undefined && !alreadySet) el.value=nd[id];
+      });
+    }
+  } else {
+    balDebts=[];balReceived=[];balExpenses=[];
+    // يوم جديد — حمّل balNextDay كاملاً
+    balLoadNextDay();
+  }
+  balRenderDebts();balRenderReceived();balRenderExpenses();balRenderRecords();balCalc();
 }
 
 // ════════════════════════════════════════════════════════
