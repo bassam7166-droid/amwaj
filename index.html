@@ -4444,6 +4444,26 @@ function mergeDBWithFirebase(remote){
           });
         }
       });
+    } else if(k==='config'){
+      // دمج config: احتفظ بـ balToday المحلي إذا كان أحدث
+      var remConf=remote[k]||{};
+      if(!DB.config) DB.config={};
+      var localToday=DB.config.balToday;
+      // انسخ كل شيء من remote
+      Object.keys(remConf).forEach(function(ck){
+        if(ck!=='balToday') DB.config[ck]=remConf[ck];
+      });
+      // أبقِ balToday المحلي إذا كان نفس اليوم أو أحدث
+      if(localToday&&localToday.date){
+        var remToday=remConf.balToday;
+        if(!remToday||localToday.date>=remToday.date){
+          DB.config.balToday=localToday;
+        } else {
+          DB.config.balToday=remToday;
+        }
+      }
+      changed=true;
+      return; // تخطَّ الـ assignment الافتراضي أسفله
     } else if(k==='inventory'){
       var remInv = remote[k]||[];
       var locInv = DB[k]||[];
@@ -5399,23 +5419,41 @@ function fbInit(){
       if(Date.now() < _fbIgnoreUntil) return;
       var d = snap.val();
       if(!d) return;
+      // احفظ balToday قبل الدمج
+      var _savedBalToday = DB.config&&DB.config.balToday ? JSON.parse(JSON.stringify(DB.config.balToday)) : null;
+
       // استخدم الدمج الذكي بدلاً من الكتابة فوق
       if(typeof mergeDBWithFirebase === 'function'){
         var merged = mergeDBWithFirebase(d);
+        // أعِد balToday المحلي إذا كان أحدث
+        if(_savedBalToday&&_savedBalToday.date){
+          if(!DB.config) DB.config={};
+          var remTd = DB.config.balToday;
+          if(!remTd||_savedBalToday.date>=remTd.date){
+            DB.config.balToday=_savedBalToday;
+          }
+        }
         if(merged){
           try{ localStorage.setItem(SAVE_KEY, JSON.stringify(DB)); }catch(e){}
-          // تحديث USERS
           try{if(DB.users&&DB.users.length){DB.users.forEach(function(u){
             var m=USERS.find(function(x){return x.username===u.login;});
             if(m){m.password=u.pass;m.role=u.role;}
           });}}catch(e){}
-          try{var page=document.querySelector('.page.active');if(page)renderPage(page.id.replace('page-',''));}catch(e){}
+          // أعِد رسم صفحة الرصيد فقط إذا كانت مفتوحة
+          try{
+            var page=document.querySelector('.page.active');
+            if(page){
+              var pid=page.id.replace('page-','');
+              if(pid!=='balance') renderPage(pid);
+            }
+          }catch(e){}
         }
       } else {
         var keys=['sales','purchases','suppliers','customers','inventory','returns','invoices','ledger','users','config','keys'];
         keys.forEach(function(k){if(d[k]!==undefined)DB[k]=d[k];});
+        if(_savedBalToday&&_savedBalToday.date){if(!DB.config)DB.config={};DB.config.balToday=_savedBalToday;}
         try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
-        try{var page=document.querySelector('.page.active');if(page)renderPage(page.id.replace('page-',''));}catch(e){}
+        try{var page=document.querySelector('.page.active');if(page&&page.id.replace('page-','')!=='balance')renderPage(page.id.replace('page-',''));}catch(e){}
       }
       fbStatus('live');
     });
@@ -5723,7 +5761,8 @@ function balSaveState(){
     expenses:JSON.parse(JSON.stringify(balExpenses)),
     fields:fields
   };
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e){}
+  // حفظ محلي + رفع Firebase
+  saveDB();
 }
 
 function balanceSaveRecord(){const data=balCalc();if(!DB.balanceRecords)DB.balanceRecords=[];DB.balanceRecords.unshift({id:Date.now(),date:todayISO(),...data});saveDB();balRenderRecords();toast('✅ تم حفظ السجل','green');}
@@ -5751,7 +5790,13 @@ function balanceClearAllRecords(){if(!confirm('حذف جميع السجلات؟'
 function balRenderRecords(){const el=document.getElementById('balRecordsTable');if(!el)return;const recs=DB.balanceRecords||[];if(!recs.length){el.innerHTML='<div class="empty-state">لا توجد سجلات</div>';return;}el.innerHTML=`<table><thead><tr><th>التاريخ</th><th>فارق رصيد×1.07</th><th>فارق سبافون×13</th><th>الشرائح</th><th>الأيام</th><th>الواصل</th><th>الديون</th><th>مصروفات</th><th>الإيرادات</th><th>الطرح</th><th>النتيجة</th><th>حذف</th></tr></thead><tbody>`+recs.map(r=>`<tr><td style="color:var(--muted);white-space:nowrap">${r.date}</td><td style="color:var(--accent)">${balFmt(r.balDiffTotal||0)} ${CUR}</td><td style="color:var(--purple)">${balFmt(r.sabTotalVal||0)} ${CUR}</td><td style="color:var(--yellow)">${balFmt(r.simTotal||0)} ${CUR}</td><td style="color:var(--green)">${balFmt(r.dailySales||0)} ${CUR}</td><td style="color:var(--green)">${balFmt(r.totalReceived||0)} ${CUR}</td><td style="color:var(--red)">${balFmt(r.totalDebts||0)} ${CUR}</td><td style="color:var(--yellow)">${balFmt(r.totalExpItems||0)} ${CUR}</td><td style="color:var(--green);font-weight:700">${balFmt(r.totalIncome||0)} ${CUR}</td><td style="color:var(--red);font-weight:700">${balFmt(r.totalExpense||0)} ${CUR}</td><td style="font-weight:900;color:${r.isProfit?'var(--green)':'var(--red)'}">${r.isProfit?'📈':'📉'} ${balFmt(Math.abs(r.result||0))} ${CUR}</td><td><button class="btn btn-red" onclick="balDeleteRecord(${r.id})" style="padding:3px 8px;font-size:11px">✕</button></td></tr>`).join('')+'</tbody></table>';}
 function balDeleteRecord(id){if(!confirm('حذف؟'))return;DB.balanceRecords=(DB.balanceRecords||[]).filter(r=>r.id!==id);saveDB();balRenderRecords();}
 function renderBalancePage(){
-  var today=todayISO(),saved=DB.config&&DB.config.balToday;
+  var today=todayISO();
+  // أعِد تحميل من localStorage لضمان أحدث بيانات
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);
+    if(raw){var ldb=JSON.parse(raw);if(ldb.config&&ldb.config.balToday){if(!DB.config)DB.config={};DB.config.balToday=ldb.config.balToday;}}
+  }catch(e){}
+  var saved=DB.config&&DB.config.balToday;
   var hasToday = saved && saved.date===today;
   if(hasToday){
     balDebts=saved.debts||[];balReceived=saved.received||[];balExpenses=saved.expenses||[];
