@@ -2844,12 +2844,16 @@ function addSupplier(){
   const name=document.getElementById('sup_name').value.trim();
   if(!name){alert('يرجى إدخال اسم المورد');return;}
   const debt=+document.getElementById('sup_debt').value||0;
-  const sup={id:Date.now(),name,phone:document.getElementById('sup_phone').value.trim(),city:document.getElementById('sup_city').value.trim(),debt};
+  const phone=document.getElementById('sup_phone')?document.getElementById('sup_phone').value.trim():'';
+  const city=document.getElementById('sup_city')?document.getElementById('sup_city').value.trim():'';
+  const sup={id:Date.now(),name,phone,city,debt};
   DB.suppliers.push(sup);
   if(debt>0){pushLedger(sup.id,'دين','رصيد مبدئي',debt,0);syncBalance(sup.id);}
-  ['sup_name','sup_phone','sup_city'].forEach(id=>document.getElementById(id).value='');
+  ['sup_name','sup_phone','sup_city'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('sup_debt').value=0;
+  saveDB();
   toggleForm('supForm'); renderPage('suppliers');
+  toast('✅ تم إضافة المورد: '+name,'green');
 }
 function addCustomer(){
   const name=document.getElementById('cust_name').value.trim();
@@ -5646,8 +5650,57 @@ function balCalc(){
 function balRecvSearch(q){const ac=document.getElementById('balRecvAC');if(!q){ac.style.display='none';return;}const m=DB.customers.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())).slice(0,6);if(!m.length){ac.style.display='none';return;}ac.innerHTML=m.map(c=>`<div style="padding:7px 11px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;" onmousedown="document.getElementById('bal_recv_name').value='${c.name.replace(/'/g,"\\'")}';document.getElementById('balRecvAC').style.display='none';" onmouseover="this.style.background='var(--ac-hover)'" onmouseout="this.style.background=''"><span style="font-weight:600;">${c.name}</span><span style="color:var(--green);font-size:10px;">${c.phone||'—'}</span></div>`).join('');ac.style.display='block';}
 function balAddReceived(){const name=document.getElementById('bal_recv_name').value.trim(),amt=+document.getElementById('bal_recv_amt').value||0;if(!name){toast('⚠ أدخل اسم العميل','yellow');return;}if(amt<=0){toast('⚠ أدخل مبلغاً','yellow');return;}let c=DB.customers.find(x=>x.name===name);if(!c){c={id:Date.now()+Math.random()|0,name,phone:'',city:'',debt:0};DB.customers.push(c);}pushLedger(c.id,'دفعة','واصل — تحويل رصيد',0,amt);syncBalance(c.id);saveDB();const ex=balReceived.findIndex(r=>r.name===name);if(ex>=0)balReceived[ex].amt+=amt;else balReceived.push({name,amt});document.getElementById('bal_recv_name').value='';document.getElementById('bal_recv_amt').value=0;balRenderReceived();balCalc();balSaveState();toast('✅ تم تسجيل الواصل في حساب '+name,'green');}
 function balRenderReceived(){const el=document.getElementById('balReceivedList');if(!el)return;if(!balReceived.length){el.innerHTML='<div style="color:var(--muted);font-size:11px;">لا توجد مبالغ واصلة</div>';return;}el.innerHTML=balReceived.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:var(--bg2);border-radius:6px;margin-bottom:3px;border:1px solid var(--border);"><span style="font-size:11px;font-weight:600;">💰 ${r.name}</span><div style="display:flex;gap:7px;align-items:center;"><span style="font-size:12px;color:var(--green);font-weight:700;">${balFmt(r.amt)} ${CUR}</span><button onclick="balReceived.splice(${i},1);balRenderReceived();balCalc();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button></div></div>`).join('');document.getElementById('balTotalReceived').textContent=balFmt(balReceived.reduce((s,r)=>s+r.amt,0))+' '+CUR;}
-function balDebtSearch(q){const ac=document.getElementById('balDebtAC');if(!q){ac.style.display='none';return;}const m=DB.customers.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())).slice(0,6);if(!m.length){ac.style.display='none';return;}ac.innerHTML=m.map(c=>`<div style="padding:7px 11px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;" onmousedown="document.getElementById('bal_debt_search').value='${c.name.replace(/'/g,"\\'")}';document.getElementById('bal_debt_amt').value=${c.debt};document.getElementById('balDebtAC').style.display='none';" onmouseover="this.style.background='var(--ac-hover)'" onmouseout="this.style.background=''"><span style="font-weight:600;">${c.name}</span><span style="color:var(--red);">${balFmt(c.debt)} ${CUR}</span></div>`).join('');ac.style.display='block';}
-function balAddDebt(){const name=document.getElementById('bal_debt_search').value.trim(),amt=+document.getElementById('bal_debt_amt').value||0;if(!name){toast('⚠ أدخل اسم العميل','yellow');return;}if(amt<=0){toast('⚠ أدخل مبلغاً','yellow');return;}let c=DB.customers.find(x=>x.name===name);if(!c){c={id:Date.now()+Math.random()|0,name,phone:'',city:'',debt:0};DB.customers.push(c);}pushLedger(c.id,'دين','دين — تحويل رصيد',amt,0);syncBalance(c.id);saveDB();const ex=balDebts.findIndex(d=>d.name===name);if(ex>=0)balDebts[ex].amt=amt;else balDebts.push({name,amt});document.getElementById('bal_debt_search').value='';document.getElementById('bal_debt_amt').value=0;balRenderDebts();balCalc();balSaveState();toast('✅ نُقل الدين لحساب '+name,'green');}
+function balDebtSearch(q){
+  var ac=document.getElementById('balDebtAC');
+  if(!q){ac.style.display='none';return;}
+  var m=DB.customers.filter(function(c){return c.name.toLowerCase().includes(q.toLowerCase());}).slice(0,6);
+  if(!m.length){ac.style.display='none';return;}
+  window._balDebtMatches=m;
+  var html='';
+  m.forEach(function(c,idx){
+    html+='<div style="padding:7px 11px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between" '
+      +'onmousedown="_balDebtPick('+idx+')">'
+      +'<span style="font-weight:600">'+c.name+'</span>'
+      +'<span style="color:var(--red)">رصيده: '+balFmt(c.debt)+' '+CUR+'</span>'
+      +'</div>';
+  });
+  ac.innerHTML=html;
+  ac.style.display='block';
+}
+function _balDebtPick(idx){
+  var m=window._balDebtMatches||[];
+  var c=m[idx];
+  if(!c)return;
+  // ضع الاسم فقط — لا تضع الدين القديم في حقل المبلغ
+  document.getElementById('bal_debt_search').value=c.name;
+  // اترك حقل المبلغ كما هو ليدخل المستخدم المبلغ الجديد
+  document.getElementById('bal_debt_amt').value='';
+  document.getElementById('balDebtAC').style.display='none';
+  // أظهر الرصيد الحالي كمعلومة فقط
+  toast('رصيد '+c.name+' الحالي: '+balFmt(c.debt)+' '+CUR,'yellow');
+  setTimeout(function(){document.getElementById('bal_debt_amt').focus();},100);
+}
+function balAddDebt(){
+  var name=document.getElementById('bal_debt_search').value.trim();
+  var amt=+document.getElementById('bal_debt_amt').value||0;
+  if(!name){toast('⚠ أدخل اسم العميل','yellow');return;}
+  if(amt<=0){toast('⚠ أدخل المبلغ الجديد','yellow');return;}
+  // أضف الدين الجديد فقط — لا تأخذ من إجمالي الحساب
+  var c=DB.customers.find(function(x){return x.name===name;});
+  if(!c){c={id:Date.now()+Math.random()|0,name,phone:'',city:'',debt:0};DB.customers.push(c);}
+  // سجّل الدين الجديد فقط (المبلغ المُدخل)
+  pushLedger(c.id,'دين','دين — تحويل رصيد',amt,0);
+  syncBalance(c.id);
+  saveDB();
+  // أضفه لقائمة الديون اليومية
+  var ex=balDebts.findIndex(function(d){return d.name===name;});
+  if(ex>=0) balDebts[ex].amt+=amt;
+  else balDebts.push({name,amt});
+  document.getElementById('bal_debt_search').value='';
+  document.getElementById('bal_debt_amt').value=0;
+  balRenderDebts();balCalc();balSaveState();
+  toast('✅ أُضيف دين '+balFmt(amt)+' '+CUR+' لحساب '+name,'green');
+}
 function balRenderDebts(){const el=document.getElementById('balDebtsList');if(!el)return;if(!balDebts.length){el.innerHTML='<div style="color:var(--muted);font-size:11px;">لا توجد ديون</div>';return;}el.innerHTML=balDebts.map((d,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:var(--bg2);border-radius:6px;margin-bottom:3px;border:1px solid var(--border);"><span style="font-size:11px;font-weight:600;">⚖ ${d.name}</span><div style="display:flex;gap:7px;align-items:center;"><span style="font-size:12px;color:var(--red);font-weight:700;">${balFmt(d.amt)} ${CUR}</span><button onclick="balDebts.splice(${i},1);balRenderDebts();balCalc();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button></div></div>`).join('');document.getElementById('balTotalDebts').textContent=balFmt(balDebts.reduce((s,d)=>s+d.amt,0))+' '+CUR;}
 function balAddExpense(){const desc=document.getElementById('bal_exp_desc').value.trim(),amt=+document.getElementById('bal_exp_amt').value||0;if(!desc){toast('⚠ أدخل المقابل','yellow');return;}if(amt<=0){toast('⚠ أدخل مبلغاً','yellow');return;}balExpenses.push({desc,amt});document.getElementById('bal_exp_desc').value='';document.getElementById('bal_exp_amt').value=0;balRenderExpenses();balCalc();balSaveState();}
 function balRenderExpenses(){const el=document.getElementById('balExpensesList');if(!el)return;if(!balExpenses.length){el.innerHTML='<div style="color:var(--muted);font-size:11px;">لا توجد مصروفات</div>';return;}el.innerHTML=balExpenses.map((e,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:var(--bg2);border-radius:6px;margin-bottom:3px;border:1px solid var(--border);"><span style="font-size:11px;font-weight:600;">📤 ${e.desc}</span><div style="display:flex;gap:7px;align-items:center;"><span style="font-size:12px;color:var(--yellow);font-weight:700;">${balFmt(e.amt)} ${CUR}</span><button onclick="balExpenses.splice(${i},1);balRenderExpenses();balCalc();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button></div></div>`).join('');document.getElementById('balTotalExpenseItems').textContent=balFmt(balExpenses.reduce((s,e)=>s+e.amt,0))+' '+CUR;}
