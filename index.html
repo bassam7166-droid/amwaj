@@ -542,6 +542,7 @@ tr:hover td{background:var(--td-hover);}
 <span id="_SB" onclick="amwajSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">💾 محلي</span>
 <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
       <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
+      <button onclick="restoreFromFirebase()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;">☁ استرجاع</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
       <span class="date-chip" id="dateChip"></span>
@@ -3060,14 +3061,15 @@ function doSendWhatsApp(id,type){
 function sendWhatsApp(){if(activeAccId)doSendWhatsApp(activeAccId,activeAccType);}
 
 function deleteRow(arr,id,page){
-  if(!isManager()){toast('⛔ للمدير فقط','red');return;}
-  const idx=arr.findIndex(x=>x.id===id);
+  if(!currentUser){toast('يرجى تسجيل الدخول','red');return;}
+  if(!isManager()){toast('⛔ هذه العملية للمدير فقط\nاستخدم حساب admin','red');return;}
+  const idx=arr.findIndex(function(x){return x.id===id;});
   if(idx<0){toast('العنصر غير موجود','yellow');return;}
-  if(!confirm('حذف هذا السجل؟ لا يمكن التراجع'))return;
+  if(!confirm('⚠ حذف هذا السجل نهائياً؟\nلا يمكن التراجع عن هذا الإجراء'))return;
   arr.splice(idx,1);
   saveDB();
   renderPage(page);
-  toast('🗑 تم الحذف','red');
+  toast('🗑 تم الحذف بنجاح','red');
 }
 
 function printInvoice(id){
@@ -4283,6 +4285,61 @@ function amwajSync(){
   amwajPull();
 }
 
+// ══ استرجاع البيانات من Firebase يدوياً ══
+function restoreFromFirebase(){
+  if(!navigator.onLine){toast('⚠ لا يوجد اتصال بالإنترنت','yellow');return;}
+  if(!confirm('استرجاع البيانات من Firebase؟\nسيتم دمج بيانات السحابة مع البيانات المحلية\nلن تُحذف أي بيانات محلية'))return;
+  toast('⏳ جاري الاسترجاع...','yellow');
+  fetch('https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d||typeof d!=='object'){toast('⚠ لا توجد بيانات في السحابة','yellow');return;}
+    var restored=0;
+    // استرجاع arrays
+    ['sales','purchases','returns','invoices','balanceRecords','stockLedger',
+     'salesDeductions','withdrawals','employees','rentItems','expHistory',
+     'suppliers','customers','inventory','users'].forEach(function(k){
+      if(!d[k]||!Array.isArray(d[k])||d[k].length===0)return;
+      if(!DB[k]||!Array.isArray(DB[k]))DB[k]=[];
+      var ids=new Set(DB[k].map(function(x){return String(x.id||'');}));
+      var add=d[k].filter(function(x){return x.id&&!ids.has(String(x.id));});
+      if(add.length>0){DB[k]=DB[k].concat(add);restored+=add.length;}
+    });
+    // استرجاع المفاتيح
+    if(d.keys&&typeof d.keys==='object'){
+      if(!DB.keys)DB.keys={types:[],sales:[],stockEntries:[],withdrawals:[]};
+      ['types','sales','stockEntries','withdrawals'].forEach(function(k){
+        if(!d.keys[k]||!Array.isArray(d.keys[k]))return;
+        if(!DB.keys[k])DB.keys[k]=[];
+        var ids=new Set(DB.keys[k].map(function(x){return String(x.id||'');}));
+        var add=d.keys[k].filter(function(x){return x.id&&!ids.has(String(x.id));});
+        if(add.length>0){DB.keys[k]=DB.keys[k].concat(add);restored+=add.length;}
+      });
+    }
+    // استرجاع دفتر الأستاذ
+    if(d.ledger&&typeof d.ledger==='object'){
+      if(!DB.ledger)DB.ledger={};
+      Object.keys(d.ledger).forEach(function(aid){
+        if(!DB.ledger[aid]){DB.ledger[aid]=d.ledger[aid];restored++;}
+        else if(d.ledger[aid].length>DB.ledger[aid].length){
+          var sigs=new Set(DB.ledger[aid].map(function(e){return e.date+'|'+e.debit+'|'+e.credit;}));
+          d.ledger[aid].forEach(function(e){
+            if(!sigs.has(e.date+'|'+e.debit+'|'+e.credit)){DB.ledger[aid].push(e);restored++;}
+          });
+        }
+      });
+    }
+    if(restored>0){
+      saveDB();
+      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+      toast('✅ تم استرجاع '+restored+' سجل من السحابة','green');
+    } else {
+      toast('✅ البيانات محدّثة - لا توجد بيانات جديدة للاسترجاع','green');
+    }
+  })
+  .catch(function(e){toast('❌ فشل الاتصال: '+e.message,'red');});
+}
+
 function amwajStart(){
   amwajPush();
   if(_amwajT)clearInterval(_amwajT);
@@ -4387,10 +4444,12 @@ function canEdit(){
 // إظهار/إخفاء أزرار التعديل بناءً على الصلاحية
 function applyEditPermissions(){
   const mgr=isManager();
-  // أزرار الحذف والتعديل في الجداول
+  // أزرار الحذف والتعديل - للمدير فقط تُخفى للمبيعات
+  if(!mgr){
   document.querySelectorAll('.btn-red[onclick*="delete"], .btn-red[onclick*="Delete"], .btn-yellow[onclick*="edit"], .btn-yellow[onclick*="Edit"]').forEach(btn=>{
-    btn.style.display=mgr?'':'none';
+    btn.style.display='none';
   });
+  }
   // أزرار إضافة الموظفين والرواتب وتعديلها
   const empBtns=['addEmpForm','emp_debt_id'];
   empBtns.forEach(id=>{
