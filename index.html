@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="أمواج الخليج">
 <meta name="theme-color" content="#07090f">
-<link rel="manifest" href="./manifest.json">
 <title>مركز أمواج الخليج للإلكترونيات</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -139,6 +137,8 @@ body.theme-rose{
 body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;}
 html{background:var(--bg);min-height:100vh;}
 #loginScreen{position:fixed!important;inset:0!important;z-index:9999!important;background:var(--bg)!important;}
+#loginScreen.ls-visible{display:flex!important;}
+#loginScreen.ls-hidden{display:none!important;}
 #sidebar{width:235px;background:var(--sidebar-bg);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .3s,background .3s;height:100dvh;}
 #sidebar.collapsed{width:60px;}
 .logo-area{padding:16px 14px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,var(--nav-active-from),var(--sidebar-bg));}
@@ -538,11 +538,10 @@ tr:hover td{background:var(--td-hover);}
       <div class="gsearch-results" id="gsearchResults"></div>
     </div>
     <div class="header-right">
-      <button id="_installBtn" onclick="installApp()" style="display:none;align-items:center;gap:5px;background:#00c8ff20;border:1px solid #00c8ff44;border-radius:8px;padding:5px 11px;color:#00c8ff;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">📲 تثبيت</button>
+      <button onclick="restoreFromFirebase()" title="استرجاع من السحابة" style="background:#7c3aed20;border:1px solid #7c3aed44;border-radius:8px;padding:5px 11px;color:#a78bfa;font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">☁ استرجاع</button>
 <span id="_SB" onclick="amwajSync()" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#ffc23e;cursor:pointer;">💾 محلي</span>
 <button id="_chgPwdBtn" onclick="openChangePwd()" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 11px;color:var(--text);font-family:Cairo,sans-serif;font-size:11px;font-weight:700;cursor:pointer;">🔒 كلمة المرور</button>
       <button onclick="openSync()" style="background:linear-gradient(135deg,#00b248,#00e5a0);border:none;border-radius:8px;padding:6px 14px;color:#000;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:5px;">🔄 مزامنة</button>
-      <button onclick="restoreFromFirebase()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-family:Cairo,sans-serif;font-size:12px;font-weight:900;cursor:pointer;">☁ استرجاع</button>
       <span class="badge badge-green" style="font-size:10px">● نشط</span>
       <span class="badge badge-purple" id="userRoleBadge" style="font-size:10px">مدير</span>
       <span class="date-chip" id="dateChip"></span>
@@ -809,12 +808,12 @@ tr:hover td{background:var(--td-hover);}
           <div class="form-group" style="position:relative">
             <label>الصنف *</label>
             <input id="inv_cat" placeholder="مثال: جوالات..." autocomplete="off" oninput="invCatAC(this.value)" onblur="setTimeout(function(){var l=document.getElementById('ac_inv_cat');if(l)l.style.display='none';},200)">
-            <div id="ac_inv_cat" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;z-index:300;max-height:180px;overflow-y:auto;margin-top:2px;"></div>
+            <div id="ac_inv_cat" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;z-index:300;max-height:180px;overflow-y:auto;"></div>
           </div>
           <div class="form-group" style="position:relative">
             <label>الاسم * <button type="button" onclick="openBC('inv_name')" style="background:none;border:none;font-size:15px;cursor:pointer;vertical-align:middle;">📷</button></label>
             <input id="inv_name" placeholder="مثال: Samsung A55" autocomplete="off" oninput="invNameAC(this.value)" onblur="setTimeout(function(){var l=document.getElementById('ac_inv_name');if(l)l.style.display='none';},200)">
-            <div id="ac_inv_name" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;z-index:300;max-height:180px;overflow-y:auto;margin-top:2px;"></div>
+            <div id="ac_inv_name" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;z-index:300;max-height:180px;overflow-y:auto;"></div>
           </div>
           <div class="form-group"><label>الكمية *</label><input id="inv_qty" type="number" value="0" min="0"></div>
           <div class="form-group"><label>سعر الشراء (ر.ي) *</label><input id="inv_buy" type="number" value="0" min="0"></div>
@@ -2775,29 +2774,6 @@ function savePurchaseInvoice(){
   setTimeout(function(){ saveDB(); },200);
 }
 
-function editPurchPayment(id){
-  var p=DB.purchases.find(function(x){return x.id===id;});
-  if(!p)return;
-  var newPaid=prompt('المبلغ المدفوع حالياً (الإجمالي: '+fmt(p.total)+' '+CUR+'):', p.paid);
-  if(newPaid===null)return;
-  var paid=Math.max(0,Math.min(p.total,+newPaid||0));
-  var oldPaid=p.paid;
-  p.paid=paid;
-  p.remain=Math.max(0,p.total-paid);
-  p.status=paid>=p.total?'مكتمل':paid>0?'جزئي':'آجل';
-  // تحديث دفتر الأستاذ إذا تغيّر المبلغ
-  if(paid!==oldPaid&&p.supId){
-    var diff=paid-oldPaid;
-    if(diff>0){
-      pushLedger(p.supId,'دفعة','دفعة إضافية — فاتورة '+p.invNo,0,diff);
-      syncBalance(p.supId);
-    }
-  }
-  saveDB();
-  renderPage('purchases');
-  toast('✅ تم تحديث الدفع: '+fmt(paid)+' '+CUR,'green');
-}
-
 function showPurchDetail(idx){
   const p=DB.purchases[idx];if(!p)return;
   document.getElementById('pdModalTitle').textContent=`فاتورة ${p.invNo} — ${p.supplier}`;
@@ -2987,9 +2963,10 @@ function saveReceiptEntry(){
 function settleDebt(id,type){
   const e=(type==='customer'?DB.customers:DB.suppliers).find(x=>x.id===id);
   if(!e||e.debt<=0){toast('لا يوجد دين','yellow');return;}
-  if(!confirm('تسوية دين '+e.name+' ('+fmt(e.debt)+' '+CUR+')؟'))return;
+  if(!confirm('تسوية دين '+e.name+' كاملاً؟'))return;
   pushLedger(e.id,'دفعة','تسوية كاملة للرصيد',0,e.debt);
-  e.debt=0;var L=getLedger(e.id);if(L.length>0)L[L.length-1].balance=0;
+  e.debt=0;
+  var L=getLedger(e.id);if(L.length>0)L[L.length-1].balance=0;
   saveDB();toast('✅ تمت تسوية '+e.name,'green');
   renderPage(type==='customer'?'debts':'supDebts');
 }
@@ -3005,46 +2982,51 @@ function doExportPDF(id,type){
   var bizName=bizCfg.bizName||'مركز امواج الخليج للالكترونيات';
   var cur=bizCfg.currency||'ر.ي';
   var typeLbl=type==='customer'?'العميل':'المورد';
+  var jsPDF2=window.jspdf.jsPDF;
+  var doc=new jsPDF2({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.setFillColor(7,9,15); doc.rect(0,0,210,297,'F');
+  doc.setFillColor(13,17,23); doc.rect(0,0,210,52,'F');
+  doc.setTextColor(0,200,255); doc.setFontSize(15); doc.setFont('helvetica','bold');
+  doc.text(bizName,105,13,{align:'center'});
+  doc.setTextColor(180,200,220); doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text('كشف حساب - '+typeLbl+': '+e.name,105,20,{align:'center'});
+  var phoneStr=e.phone?'الهاتف: '+e.phone+'   |   ':'';
+  doc.text(phoneStr+'التاريخ: '+new Date().toLocaleDateString('ar-SA'),105,27,{align:'center'});
   var tD=L.reduce(function(s,x){return s+x.debit;},0);
   var tC=L.reduce(function(s,x){return s+x.credit;},0);
-  var today2=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
-  var rows2=L.map(function(x){
-    return '<tr><td>'+x.date+'<\/td><td>'+x.desc+'<\/td><td>'+x.type+'<\/td>'
-      +'<td style="color:#ff4d6d">'+(x.debit>0?fmt(x.debit)+' '+cur:'—')+'<\/td>'
-      +'<td style="color:#00e5a0">'+(x.credit>0?fmt(x.credit)+' '+cur:'—')+'<\/td>'
-      +'<td style="color:#ffc23e;font-weight:700">'+fmt(x.balance)+' '+cur+'<\/td><\/tr>';
-  }).join('');
-  var html2='<html lang=ar dir=rtl><head><meta charset=UTF-8>'
-    +'<style>@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap");'
-    +'*{margin:0;padding:0;box-sizing:border-box}body{font-family:Cairo,Arial,sans-serif;background:#fff;color:#111;padding:24px;direction:rtl}'
-    +'.hdr{text-align:center;border-bottom:3px solid #1a2e6e;padding-bottom:16px;margin-bottom:20px}'
-    +'.bn{font-size:22px;font-weight:900;color:#1a2e6e}.sub{font-size:13px;color:#444;margin-top:6px}'
-    +'.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}'
-    +'.card{border:2px solid #ddd;border-radius:10px;padding:14px;text-align:center}'
-    +'.cl{font-size:11px;color:#666;margin-bottom:6px}.cv{font-size:18px;font-weight:900}'
-    +'table{width:100%;border-collapse:collapse;font-size:12px}'
-    +'th{padding:10px 8px;background:#1a2e6e;color:#fff;text-align:right;font-weight:700}'
-    +'td{padding:8px;border-bottom:1px solid #eee;text-align:right}'
-    +'tr:nth-child(even){background:#f9f9f9}'
-    +'@media print{body{padding:10px}button{display:none!important}}<\/style>'
-    +'<\/head><body>'
-    +'<div class=hdr><div class=bn>'+bizName+'<\/div>'
-    +'<div class=sub>كشف حساب '+typeLbl+': <strong>'+e.name+'<\/strong>'+(e.phone?' | هاتف: '+e.phone:'')+'<\/div>'
-    +'<div class=sub>'+today2+'<\/div><\/div>'
-    +'<div class=cards>'
-    +'<div class=card><div class=cl>إجمالي الديون<\/div><div class=cv style="color:#c00">'+fmt(tD)+' '+cur+'<\/div><\/div>'
-    +'<div class=card><div class=cl>إجمالي المدفوع<\/div><div class=cv style="color:#080">'+fmt(tC)+' '+cur+'<\/div><\/div>'
-    +'<div class=card><div class=cl>الرصيد المتبقي<\/div><div class=cv style="color:#a60">'+fmt(e.debt)+' '+cur+'<\/div><\/div>'
-    +'<\/div>'
-    +(L.length
-      ?'<table><thead><tr><th>التاريخ<\/th><th>البيان<\/th><th>النوع<\/th><th>مدين<\/th><th>دائن<\/th><th>الرصيد<\/th><\/tr><\/thead><tbody>'+rows2+'<\/tbody><\/table>'
-      :'<p style="text-align:center;padding:30px;color:#888">لا توجد حركات<\/p>')
-    +'<div style="text-align:center;margin-top:20px">'
-    +'<button onclick="window.print()" style="background:#1a2e6e;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-family:Cairo,Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer">طباعة / حفظ PDF<\/button>'
-    +'<\/div><\/body><\/html>';
-  var w=window.open('','_blank');
-  if(!w){toast('اسمح بالنوافذ المنبثقة من إعدادات المتصفح','yellow');return;}
-  w.document.write(html2);w.document.close();
+  var cards=[
+    ['اجمالي الديون',fmt(tD)+' '+cur,[255,77,109],14],
+    ['اجمالي المدفوع',fmt(tC)+' '+cur,[0,229,160],84],
+    ['الرصيد المتبقي',fmt(e.debt)+' '+cur,[255,194,62],154]
+  ];
+  cards.forEach(function(card){
+    doc.setFillColor(20,30,50); doc.roundedRect(card[3],33,52,15,3,3,'F');
+    doc.setTextColor(100,130,160); doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.text(card[0],card[3]+4,39);
+    doc.setTextColor(card[2][0],card[2][1],card[2][2]); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text(card[1],card[3]+4,46);
+  });
+  if(L.length){
+    doc.setTextColor(180,200,220); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text('سجل الحركات المالية',14,60);
+    doc.autoTable({
+      startY:63,
+      head:[['التاريخ','البيان','النوع','مدين','دائن','الرصيد']],
+      body:L.map(function(x){return[x.date,x.desc,x.type,x.debit>0?fmt(x.debit)+' '+cur:'—',x.credit>0?fmt(x.credit)+' '+cur:'—',fmt(x.balance)+' '+cur];}),
+      styles:{font:'helvetica',fontSize:8,textColor:[180,200,220],fillColor:[13,17,23],lineColor:[26,37,64],lineWidth:0.3},
+      headStyles:{fillColor:[14,32,64],textColor:[0,200,255],fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[15,22,36]},
+      columnStyles:{3:{textColor:[255,77,109]},4:{textColor:[0,229,160]},5:{textColor:[255,194,62]}},
+      margin:{left:14,right:14}
+    });
+  } else {
+    doc.setTextColor(100,130,160); doc.setFontSize(9);
+    doc.text('لا توجد حركات مالية مسجلة',105,70,{align:'center'});
+  }
+  doc.setFillColor(20,30,50); doc.rect(0,275,210,22,'F');
+  doc.setTextColor(80,100,130); doc.setFontSize(7); doc.setFont('helvetica','normal');
+  doc.text(bizName+' | '+new Date().toLocaleDateString('ar-SA'),105,284,{align:'center'});
+  doc.save('كشف-حساب-'+e.name+'-'+todayISO()+'.pdf');
 }
 function exportPDF(){if(activeAccId)doExportPDF(activeAccId,activeAccType);}
 
@@ -3061,15 +3043,11 @@ function doSendWhatsApp(id,type){
 function sendWhatsApp(){if(activeAccId)doSendWhatsApp(activeAccId,activeAccType);}
 
 function deleteRow(arr,id,page){
-  if(!currentUser){toast('يرجى تسجيل الدخول','red');return;}
-  if(!isManager()){toast('⛔ هذه العملية للمدير فقط\nاستخدم حساب admin','red');return;}
-  const idx=arr.findIndex(function(x){return x.id===id;});
-  if(idx<0){toast('العنصر غير موجود','yellow');return;}
-  if(!confirm('⚠ حذف هذا السجل نهائياً؟\nلا يمكن التراجع عن هذا الإجراء'))return;
-  arr.splice(idx,1);
+  const idx=arr.findIndex(x=>x.id===id);
+  if(idx<0)return;
+  if(!confirm('حذف هذا السجل؟'))return;
+  arr.splice(idx,1); renderPage(page);
   saveDB();
-  renderPage(page);
-  toast('🗑 تم الحذف بنجاح','red');
 }
 
 function printInvoice(id){
@@ -3796,7 +3774,7 @@ function renderSalesTable(){
   for(var x=0;x<rows.length;x++){
     var s=rows[x];
     var dc=s.remain>0?'#ffc23e':'var(--muted)';
-    var db=isManager()?'<button class="btn btn-red" onclick="deleteRow(DB.sales,'+s.id+',\'sales\')" style="padding:3px 8px;font-size:11px;">حذف</button>':'';
+    var db=isManager()?'<button class="btn btn-red" onclick="deleteSaleRow('+s.id+')" style="padding:3px 8px;font-size:11px;">🗑 حذف</button>':'';
     out+='<tr>'
       +'<td style="color:var(--accent);font-weight:700;">'+s.invId+'</td>'
       +'<td style="color:var(--muted);font-size:11px;">'+(s.date||'').substring(0,10)+'</td>'
@@ -3880,7 +3858,7 @@ function renderPurchTable(){
   if(q) rows=rows.filter(r=>r.invNo.toLowerCase().includes(q)||r.supplier.toLowerCase().includes(q)||r.items.toLowerCase().includes(q));
   document.getElementById('purchasesTable').innerHTML=rows.length===0?'<div class="empty-state">لا توجد نتائج</div>':
     '<table><thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>المورد</th><th>النوع</th><th>الأصناف</th><th>إجمالي الفاتورة</th><th>المدفوع</th><th>الدين</th><th>الدفع</th><th>الحالة</th><th>تفاصيل</th><th>حذف</th></tr></thead><tbody>'+
-    rows.map((p,i)=>`<tr><td style="color:var(--accent);font-weight:700">${p.invNo}</td><td style="color:var(--muted)">${p.date}</td><td style="font-weight:600">${p.supplier}</td><td>${sBadge(p.invType)}</td><td style="color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.items}">${p.items}</td><td style="color:var(--accent);font-weight:700">${fmt(p.total)} ${CUR}</td><td style="color:var(--green)">${fmt(p.paid)} ${CUR}</td><td style="color:var(--red);font-weight:700">${fmt(p.remain)} ${CUR}</td><td>${sBadge(p.payType)}</td><td>${sBadge(p.status)}</td><td style="white-space:nowrap"><button class="btn btn-gray" onclick="showPurchDetail(${i})" style="padding:3px 8px;font-size:11px">📋</button>${isManager()?`<button class="btn btn-yellow" onclick="editPurchPayment(${p.id})" style="padding:3px 8px;font-size:11px;margin-right:3px">✏</button>`:''}${isManager()?`<button class="btn btn-red" onclick="deleteRow(DB.purchases,${p.id},'purchases')" style="padding:3px 8px;font-size:11px">✕</button>`:''}</td></tr>`).join('')+
+    rows.map((p,i)=>`<tr><td style="color:var(--accent);font-weight:700">${p.invNo}</td><td style="color:var(--muted)">${p.date}</td><td style="font-weight:600">${p.supplier}</td><td>${sBadge(p.invType)}</td><td style="color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.items}">${p.items}</td><td style="color:var(--accent);font-weight:700">${fmt(p.total)} ${CUR}</td><td style="color:var(--green)">${fmt(p.paid)} ${CUR}</td><td style="color:var(--red);font-weight:700">${fmt(p.remain)} ${CUR}</td><td>${sBadge(p.payType)}</td><td>${sBadge(p.status)}</td><td style="white-space:nowrap"><button class="btn btn-gray" onclick="showPurchDetail(${i})" style="padding:3px 8px;font-size:11px">📋</button>${isManager()?`<button class="btn btn-yellow" onclick="editPurchPayment(${p.id})" style="padding:3px 8px;font-size:11px"> ✏</button><button class="btn btn-red" onclick="deletePurchase(${p.id})" style="padding:3px 8px;font-size:11px">🗑</button>`:''}</td></tr>`).join('')+
     '</tbody></table>';
 }
 
@@ -3999,7 +3977,7 @@ function renderInventoryTable(){
     if(mgr) out+='<td style="color:var(--green);">'+margin+'</td>';
     out+='<td style="color:var(--purple);font-weight:700;">'+fmt(qty*it.sellPrice)+' '+CUR+'</td>';
     out+='<td><button class="btn btn-yellow" onclick="openEditInv('+it.id+')" style="padding:3px 8px;font-size:11px;">تعديل</button></td>';
-    out+='<td><button class="btn btn-red" onclick="deleteRow(DB.inventory,'+it.id+',\'inventory\')" style="padding:3px 8px;font-size:11px;">حذف</button></td>';
+    out+='<td style="white-space:nowrap"><button class="btn btn-yellow" onclick="openEditInv('+it.id+')" style="padding:3px 8px;font-size:11px;">✏</button> <button class="btn btn-red" onclick="deleteInvItem('+it.id+')" style="padding:3px 8px;font-size:11px;">🗑</button></td>';
     out+='</tr>';
   }
   out+='</tbody></table>';
@@ -4008,28 +3986,10 @@ function renderInventoryTable(){
 
 
 
-function saveEditInv(){
-  var id=+document.getElementById('ei_id').value;
-  var inv=DB.inventory.find(function(i){return i.id===id;});
-  if(!inv)return;
-  var name=(document.getElementById('ei_name').value||'').trim();
-  var cat=(document.getElementById('ei_cat').value||'').trim();
-  if(!name||!cat){alert('ادخل الاسم والصنف');return;}
-  inv.name=name; inv.category=cat;
-  inv.qty=+document.getElementById('ei_qty').value||0;
-  inv.buyPrice=+document.getElementById('ei_buy').value||0;
-  inv.sellPrice=+document.getElementById('ei_sell').value||0;
-  inv.minQty=+document.getElementById('ei_min').value||3;
-  saveDB();
-  document.getElementById('editInvModal').classList.remove('open');
-  renderPage('inventory');
-  checkLowStockAlerts();
-  toast('تم تحديث '+name,'green');
-}
-
 function openEditInv(id){
-  var inv=DB.inventory.find(function(i){return i.id===id;});
-  if(!inv)return;
+  var numId=typeof id==='number'?id:+id;
+  var inv=DB.inventory.find(function(i){return i.id===numId||String(i.id)===String(id);});
+  if(!inv){toast('الصنف غير موجود','yellow');return;}
   var m=document.getElementById('editInvModal');
   if(!m){
     m=document.createElement('div');
@@ -4064,6 +4024,8 @@ function openEditInv(id){
     var _cn=document.createElement('button'); _cn.className='btn btn-gray'; _cn.textContent='الغاء'; _cn.style.cssText='padding:10px 16px;font-family:Cairo,sans-serif;'; _cn.onclick=function(){document.getElementById('editInvModal').classList.remove('open');};
     _btns.appendChild(_sv); _btns.appendChild(_cn); md.appendChild(_btns);
     m.appendChild(md);
+    document.body.appendChild(m); // ← إضافة للصفحة
+    m.onclick=function(e){if(e.target===m)m.classList.remove('open');};
   }
   document.getElementById('ei_id').value=id;
   document.getElementById('ei_name').value=inv.name;
@@ -4076,8 +4038,8 @@ function openEditInv(id){
 }
 function saveEditInv(){
   var id=+document.getElementById('ei_id').value;
-  var inv=DB.inventory.find(function(i){return i.id===id;});
-  if(!inv)return;
+  var inv=DB.inventory.find(function(i){return i.id===id||String(i.id)===String(id);});
+  if(!inv){toast('خطأ: الصنف غير موجود','red');return;}
   var name=(document.getElementById('ei_name').value||'').trim();
   var cat=(document.getElementById('ei_cat').value||'').trim();
   if(!name||!cat){alert('ادخل الاسم والصنف');return;}
@@ -4285,61 +4247,6 @@ function amwajSync(){
   amwajPull();
 }
 
-// ══ استرجاع البيانات من Firebase يدوياً ══
-function restoreFromFirebase(){
-  if(!navigator.onLine){toast('⚠ لا يوجد اتصال بالإنترنت','yellow');return;}
-  if(!confirm('استرجاع البيانات من Firebase؟\nسيتم دمج بيانات السحابة مع البيانات المحلية\nلن تُحذف أي بيانات محلية'))return;
-  toast('⏳ جاري الاسترجاع...','yellow');
-  fetch('https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json')
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(!d||typeof d!=='object'){toast('⚠ لا توجد بيانات في السحابة','yellow');return;}
-    var restored=0;
-    // استرجاع arrays
-    ['sales','purchases','returns','invoices','balanceRecords','stockLedger',
-     'salesDeductions','withdrawals','employees','rentItems','expHistory',
-     'suppliers','customers','inventory','users'].forEach(function(k){
-      if(!d[k]||!Array.isArray(d[k])||d[k].length===0)return;
-      if(!DB[k]||!Array.isArray(DB[k]))DB[k]=[];
-      var ids=new Set(DB[k].map(function(x){return String(x.id||'');}));
-      var add=d[k].filter(function(x){return x.id&&!ids.has(String(x.id));});
-      if(add.length>0){DB[k]=DB[k].concat(add);restored+=add.length;}
-    });
-    // استرجاع المفاتيح
-    if(d.keys&&typeof d.keys==='object'){
-      if(!DB.keys)DB.keys={types:[],sales:[],stockEntries:[],withdrawals:[]};
-      ['types','sales','stockEntries','withdrawals'].forEach(function(k){
-        if(!d.keys[k]||!Array.isArray(d.keys[k]))return;
-        if(!DB.keys[k])DB.keys[k]=[];
-        var ids=new Set(DB.keys[k].map(function(x){return String(x.id||'');}));
-        var add=d.keys[k].filter(function(x){return x.id&&!ids.has(String(x.id));});
-        if(add.length>0){DB.keys[k]=DB.keys[k].concat(add);restored+=add.length;}
-      });
-    }
-    // استرجاع دفتر الأستاذ
-    if(d.ledger&&typeof d.ledger==='object'){
-      if(!DB.ledger)DB.ledger={};
-      Object.keys(d.ledger).forEach(function(aid){
-        if(!DB.ledger[aid]){DB.ledger[aid]=d.ledger[aid];restored++;}
-        else if(d.ledger[aid].length>DB.ledger[aid].length){
-          var sigs=new Set(DB.ledger[aid].map(function(e){return e.date+'|'+e.debit+'|'+e.credit;}));
-          d.ledger[aid].forEach(function(e){
-            if(!sigs.has(e.date+'|'+e.debit+'|'+e.credit)){DB.ledger[aid].push(e);restored++;}
-          });
-        }
-      });
-    }
-    if(restored>0){
-      saveDB();
-      try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
-      toast('✅ تم استرجاع '+restored+' سجل من السحابة','green');
-    } else {
-      toast('✅ البيانات محدّثة - لا توجد بيانات جديدة للاسترجاع','green');
-    }
-  })
-  .catch(function(e){toast('❌ فشل الاتصال: '+e.message,'red');});
-}
-
 function amwajStart(){
   amwajPush();
   if(_amwajT)clearInterval(_amwajT);
@@ -4444,17 +4351,18 @@ function canEdit(){
 // إظهار/إخفاء أزرار التعديل بناءً على الصلاحية
 function applyEditPermissions(){
   const mgr=isManager();
-  // أزرار الحذف والتعديل - للمدير فقط تُخفى للمبيعات
-  if(!mgr){
-  document.querySelectorAll('.btn-red[onclick*="delete"], .btn-red[onclick*="Delete"], .btn-yellow[onclick*="edit"], .btn-yellow[onclick*="Edit"]').forEach(btn=>{
-    btn.style.display='none';
+  if(mgr) return; // المدير: لا يُخفى شيء
+  // غير المدير: أخفِ أزرار الحذف والتعديل
+  document.querySelectorAll('button[onclick]').forEach(function(btn){
+    var oc=btn.getAttribute('onclick')||'';
+    if(oc.indexOf('delete')>-1||oc.indexOf('Delete')>-1||oc.indexOf('openEditInv')>-1||oc.indexOf('editPurch')>-1){
+      btn.style.display='none';
+    }
   });
-  }
-  // أزرار إضافة الموظفين والرواتب وتعديلها
   const empBtns=['addEmpForm','emp_debt_id'];
-  empBtns.forEach(id=>{
+  empBtns.forEach(function(id){
     const el=document.getElementById(id);
-    if(el) el.style.pointerEvents=mgr?'':'none';
+    if(el) el.style.pointerEvents='none';
   });
 }
 function applyRoleToSidebar(){
@@ -4886,7 +4794,10 @@ function tryLogin(){
   }
   err.style.display='none';
   currentUser=user;
-  document.getElementById('loginScreen').style.display='none';
+  var _ls=document.getElementById('loginScreen');
+  _ls.classList.remove('ls-visible');
+  _ls.classList.add('ls-hidden');
+  _ls.style.display='none';
   const _shell=document.getElementById('appShell');
   _shell.style.display='flex';
   _shell.style.flexDirection='column';
@@ -4941,7 +4852,10 @@ function doLogout(){
   if(!confirm('تأكيد تسجيل الخروج؟\nبياناتك محفوظة ولن تُحذف.')) return;
   try{ localStorage.removeItem('amwaj_session'); }catch(e){}
   currentUser=null;
-  document.getElementById('loginScreen').style.display='flex';
+  var _ls2=document.getElementById('loginScreen');
+  _ls2.classList.remove('ls-hidden');
+  _ls2.classList.add('ls-visible');
+  _ls2.style.display='flex';
   document.getElementById('appShell').style.display='none';
   document.body.style.overflow='';
   var uEl=document.getElementById('li_user');
@@ -4953,7 +4867,7 @@ function doLogout(){
 }
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none')tryLogin();
+  var _lse=document.getElementById('loginScreen');if(e.key==='Enter'&&_lse&&!_lse.classList.contains('ls-hidden'))tryLogin();
 });
 
 // ═══════════════════════════════════════
@@ -5415,21 +5329,19 @@ function balDebtSearch(q){
   var ac=document.getElementById('balDebtAC');if(!q){ac.style.display='none';return;}
   var m=DB.customers.filter(function(c){return c.name.toLowerCase().includes(q.toLowerCase());}).slice(0,6);
   if(!m.length){ac.style.display='none';return;}
-  window._balDebtMatches=m;var html='';
-  m.forEach(function(c,idx){html+='<div style="padding:7px 11px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between" onmousedown="_balDebtPick('+idx+')">'+'<span style="font-weight:600">'+c.name+'</span>'+'<span style="color:var(--red)">رصيده: '+balFmt(c.debt)+' '+CUR+'</span></div>';});
-  ac.innerHTML=html;ac.style.display='block';}
-function _balDebtPick(idx){var m=window._balDebtMatches||[];var c=m[idx];if(!c)return;document.getElementById('bal_debt_search').value=c.name;document.getElementById('bal_debt_amt').value='';document.getElementById('balDebtAC').style.display='none';toast('رصيد '+c.name+': '+balFmt(c.debt)+' '+CUR,'yellow');setTimeout(function(){document.getElementById('bal_debt_amt').focus();},100);}
-function balAddDebt(){
-  var name=document.getElementById('bal_debt_search').value.trim();var amt=+document.getElementById('bal_debt_amt').value||0;
-  if(!name){toast('⚠ أدخل اسم العميل','yellow');return;}if(amt<=0){toast('⚠ أدخل المبلغ الجديد','yellow');return;}
-  var c=DB.customers.find(function(x){return x.name===name;});
-  if(!c){c={id:Date.now()+Math.random()|0,name,phone:'',city:'',debt:0};DB.customers.push(c);}
-  pushLedger(c.id,'دين','دين — تحويل رصيد',amt,0);syncBalance(c.id);saveDB();
-  var ex=balDebts.findIndex(function(d){return d.name===name;});
-  if(ex>=0)balDebts[ex].amt+=amt;else balDebts.push({name,amt});
-  document.getElementById('bal_debt_search').value='';document.getElementById('bal_debt_amt').value=0;
-  balRenderDebts();balCalc();if(typeof balSaveState==='function')balSaveState();
-  toast('✅ أُضيف دين '+balFmt(amt)+' '+CUR+' لـ '+name,'green');}
+  window._balDebtMatches=m;
+  ac.innerHTML=m.map(function(c,idx){return '<div style="padding:7px 11px;cursor:pointer;font-size:12px;display:flex;justify-content:space-between;border-bottom:1px solid var(--border)" onmousedown="_balDebtPick('+idx+')">'+'<span style="font-weight:600">'+c.name+'</span><span style="color:var(--red)">'+balFmt(c.debt)+' '+CUR+'</span></div>';}).join('');
+  ac.style.display='block';
+}
+function _balDebtPick(idx){
+  var m=window._balDebtMatches||[];var c=m[idx];if(!c)return;
+  document.getElementById('bal_debt_search').value=c.name;
+  document.getElementById('bal_debt_amt').value='';
+  document.getElementById('balDebtAC').style.display='none';
+  toast('رصيد '+c.name+': '+balFmt(c.debt)+' '+CUR,'yellow');
+  setTimeout(function(){var el=document.getElementById('bal_debt_amt');if(el)el.focus();},100);
+}
+function balAddDebt(){const name=document.getElementById('bal_debt_search').value.trim(),amt=+document.getElementById('bal_debt_amt').value||0;if(!name){toast('⚠ أدخل اسم العميل','yellow');return;}if(amt<=0){toast('⚠ أدخل مبلغاً','yellow');return;}let c=DB.customers.find(x=>x.name===name);if(!c){c={id:Date.now()+Math.random()|0,name,phone:'',city:'',debt:0};DB.customers.push(c);}pushLedger(c.id,'دين','دين — تحويل رصيد',amt,0);syncBalance(c.id);saveDB();const ex=balDebts.findIndex(d=>d.name===name);if(ex>=0)balDebts[ex].amt=amt;else balDebts.push({name,amt});document.getElementById('bal_debt_search').value='';document.getElementById('bal_debt_amt').value=0;balRenderDebts();balCalc();toast('✅ نُقل الدين لحساب '+name,'green');}
 function balRenderDebts(){const el=document.getElementById('balDebtsList');if(!el)return;if(!balDebts.length){el.innerHTML='<div style="color:var(--muted);font-size:11px;">لا توجد ديون</div>';return;}el.innerHTML=balDebts.map((d,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:var(--bg2);border-radius:6px;margin-bottom:3px;border:1px solid var(--border);"><span style="font-size:11px;font-weight:600;">⚖ ${d.name}</span><div style="display:flex;gap:7px;align-items:center;"><span style="font-size:12px;color:var(--red);font-weight:700;">${balFmt(d.amt)} ${CUR}</span><button onclick="balDebts.splice(${i},1);balRenderDebts();balCalc();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button></div></div>`).join('');document.getElementById('balTotalDebts').textContent=balFmt(balDebts.reduce((s,d)=>s+d.amt,0))+' '+CUR;}
 function balAddExpense(){const desc=document.getElementById('bal_exp_desc').value.trim(),amt=+document.getElementById('bal_exp_amt').value||0;if(!desc){toast('⚠ أدخل المقابل','yellow');return;}if(amt<=0){toast('⚠ أدخل مبلغاً','yellow');return;}balExpenses.push({desc,amt});document.getElementById('bal_exp_desc').value='';document.getElementById('bal_exp_amt').value=0;balRenderExpenses();balCalc();}
 function balRenderExpenses(){const el=document.getElementById('balExpensesList');if(!el)return;if(!balExpenses.length){el.innerHTML='<div style="color:var(--muted);font-size:11px;">لا توجد مصروفات</div>';return;}el.innerHTML=balExpenses.map((e,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 7px;background:var(--bg2);border-radius:6px;margin-bottom:3px;border:1px solid var(--border);"><span style="font-size:11px;font-weight:600;">📤 ${e.desc}</span><div style="display:flex;gap:7px;align-items:center;"><span style="font-size:12px;color:var(--yellow);font-weight:700;">${balFmt(e.amt)} ${CUR}</span><button onclick="balExpenses.splice(${i},1);balRenderExpenses();balCalc();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button></div></div>`).join('');document.getElementById('balTotalExpenseItems').textContent=balFmt(balExpenses.reduce((s,e)=>s+e.amt,0))+' '+CUR;}
@@ -6038,16 +5950,13 @@ function renderRentItems(){
     const today=new Date().getDate();
     if(!items.length){el.innerHTML='<div class="empty-state">لا توجد إيجارات</div>';}
     else{
-      el.innerHTML='<table><thead><tr><th>الاسم</th><th>المستفيد</th><th>المستحق</th><th>المسحوب</th><th>الديون المخصومة</th><th>الصافي المتبقي</th><th>الاستحقاق</th><th>إجراء</th></tr></thead><tbody>'+
+      el.innerHTML='<table><thead><tr><th>الاسم</th><th>المستفيد</th><th>المستحق</th><th>المسحوب</th><th>الديون</th><th>الصافي المتبقي</th><th>الاستحقاق</th><th>إجراء</th></tr></thead><tbody>'+
       items.map(i=>{
         const paid=rentDrawnThisMonth(i.id,m);
         const ownerDebt=rentOwnerDebt(i.id);
         const intDebt=i.debts||0;
         const totalDebt=ownerDebt+intDebt;
-        // المتبقي = المبلغ المستحق - المبلغ المسحوب + الديون (الديون تعتبر مدفوعات)
-        const remain=Math.max(0,i.amt-paid-totalDebt);
-        // المبلغ الصافي للدفع = المبلغ المستحق - الديون المخصومة - المدفوع
-        const netDue=Math.max(0,i.amt-totalDebt-paid);
+        const netDue=Math.max(0,i.amt-paid-totalDebt);
         return`<tr>
           <td style="font-weight:600">${i.name}</td>
           <td style="color:var(--muted)">${i.owner||'—'}</td>
@@ -6699,57 +6608,15 @@ function renderKeyStockTab(){
         <td style="color:var(--muted)">${totalSold}</td>
         <td style="color:var(--muted)">${t.minQty}</td>
         <td>${status}</td>
-        <td style="display:flex;gap:4px;flex-wrap:wrap;">
-          <button class="btn btn-yellow" onclick="editKeyType(${t.id})" style="font-size:10px;padding:3px 7px;">✏ تعديل</button>
-          <button class="btn btn-blue" onclick="editKeyMinQty(${t.id})" style="font-size:10px;padding:3px 7px;">⚙ حد</button>
+        <td style="display:flex;gap:4px;">
+          <button class="btn btn-blue" onclick="editKeyMinQty(${t.id})" style="font-size:10px;padding:3px 7px;">⚙</button>
           ${isManager()?`<button class="btn btn-red" onclick="deleteKeyType(${t.id})" style="font-size:10px;padding:3px 7px;">✕</button>`:''}
         </td>
       </tr>`;
     }).join('')+'</tbody></table>';
 
-  // ── سجل حركات إدخال المخزون مع تعديل وحذف ──
-  var stLogEl=document.getElementById('keyStockLog');
-  if(!stLogEl){
-    stLogEl=document.createElement('div');
-    stLogEl.id='keyStockLog';
-    stLogEl.style.cssText='margin-top:14px;';
-    if(el&&el.parentNode) el.parentNode.insertBefore(stLogEl,el.nextSibling);
-  }
-  var entries=k.stockEntries||[];
-  if(!entries.length){
-    stLogEl.innerHTML='';
-  } else {
-    var stHtml='<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.5px;padding:0 2px;">📋 سجل إدخال المخزون</div>'
-      +'<table><thead><tr><th>التاريخ</th><th>النوع</th><th>الكمية</th><th>إجراء</th></tr></thead><tbody>';
-    [...entries].reverse().forEach(function(e){
-      stHtml+='<tr>'
-        +'<td style="color:var(--muted);font-size:11px;">'+e.date+'</td>'
-        +'<td style="font-weight:600">'+e.typeName+'</td>'
-        +'<td style="color:var(--green);font-weight:700">+'+e.qty+'</td>'
-        +'<td>'+(isManager()?'<button class="btn btn-red" onclick="deleteKeyStockEntry('+e.id+')" style="font-size:10px;padding:3px 7px;">✕</button>':'—')+'</td>'
-        +'</tr>';
-    });
-    stHtml+='</tbody></table>';
-    stLogEl.innerHTML=stHtml;
-  }
-
   renderKeysBalanceTab();
   if(!document.querySelector('#keyStockAddRows > div')) addKeyStockRow();
-}
-
-function deleteKeyStockEntry(id){
-  if(!confirm('حذف هذه الحركة؟\nسيتم خصم الكمية من المخزون'))return;
-  const k=keysDB();
-  const e=(k.stockEntries||[]).find(x=>x.id===id);
-  if(e){
-    const t=k.types.find(x=>x.id===e.typeId);
-    if(t) t.qty=Math.max(0,t.qty-e.qty);
-  }
-  k.stockEntries=(k.stockEntries||[]).filter(x=>x.id!==id);
-  saveDB();
-  renderKeyStockTab();
-  renderKeySaleRows();
-  toast('🗑 تم حذف الحركة وتعديل المخزون','red');
 }
 
 function editKeyMinQty(id){
@@ -6761,33 +6628,6 @@ function editKeyMinQty(id){
   if(n<1){toast('⚠ أدخل رقماً صحيحاً','yellow');return;}
   t.minQty=n; saveDB(); renderKeyStockTab();
   toast('✅ تم التحديث','green');
-}
-
-function editKeyType(id){
-  const k=keysDB();
-  const t=k.types.find(x=>x.id===id); if(!t) return;
-  // تعديل الاسم
-  const newName=prompt('اسم النوع:', t.name);
-  if(newName===null) return;
-  if(!newName.trim()){toast('⚠ أدخل اسماً','yellow');return;}
-  // تعديل الكمية
-  const newQty=prompt('الكمية المتوفرة حالياً ('+t.qty+'):', t.qty);
-  if(newQty===null) return;
-  const q=Math.max(0,+newQty||0);
-  
-  const oldName=t.name;
-  t.name=newName.trim();
-  t.qty=q;
-  
-  // تحديث الاسم في المبيعات وسجل المخزون
-  k.sales.forEach(function(s){if(s.typeId===id)s.typeName=t.name;});
-  (k.stockEntries||[]).forEach(function(e){if(e.typeId===id)e.typeName=t.name;});
-  
-  saveDB();
-  renderKeyStockTab();
-  renderKeyTypeSelects();
-  renderKeySaleRows();
-  toast('✅ تم تعديل النوع: '+t.name+' — الكمية: '+t.qty,'green');
 }
 
 function deleteKeyType(id){
@@ -7538,88 +7378,399 @@ window.addEventListener('offline',function(){_amwajSB('🔴 لا إنترنت','
   </div>
 </div>
 
+
 <script>
-// ══ دوال إضافية - نسخة واحدة فقط ══
+// ══════════════════════════════════════════════
+// دوال إضافية - نسخة واحدة نهائية
+// ══════════════════════════════════════════════
 
+// ══ إكمال تلقائي المخزون ══
 var _iCL=[];
-function invCatAC(v){var l=document.getElementById('ac_inv_cat');if(!l)return;var q=(v||'').trim().toLowerCase();var cats=[...new Set((DB.inventory||[]).map(function(i){return i.category||'';}).filter(Boolean))];if(q)cats=cats.filter(function(c){return c.toLowerCase().indexOf(q)>-1;});cats=cats.slice(0,8);if(!cats.length){l.style.display='none';_iCL=[];return;}_iCL=cats;var h='';cats.forEach(function(c,i){var cnt=(DB.inventory||[]).filter(function(x){return x.category===c;}).length;h+='<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmousedown="_iCP('+i+')"><b>'+c+'<\/b> ('+cnt+')<\/div>';});l.innerHTML=h;l.style.display='block';}
-function _iCP(i){var cc=_iCL[i];if(!cc)return;var el=document.getElementById('inv_cat');if(el)el.value=cc;var l=document.getElementById('ac_inv_cat');if(l)l.style.display='none';var n=document.getElementById('inv_name');if(n){invNameAC(n.value);n.focus();}}
+function invCatAC(v){
+  var l=document.getElementById('ac_inv_cat');if(!l)return;
+  var q=(v||'').trim().toLowerCase();
+  var cats=[...new Set((DB.inventory||[]).map(function(i){return i.category||'';}).filter(Boolean))];
+  if(q)cats=cats.filter(function(x){return x.toLowerCase().indexOf(q)>-1;});
+  cats=cats.slice(0,8);
+  if(!cats.length){l.style.display='none';_iCL=[];return;}
+  _iCL=cats;
+  l.innerHTML=cats.map(function(x,i){var cnt=(DB.inventory||[]).filter(function(ii){return ii.category===x;}).length;return'<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmousedown="_iCP('+i+')"><b>'+x+'</b> <span style="color:var(--muted);font-size:11px;">('+cnt+')</span></div>';}).join('');
+  l.style.display='block';
+}
+function _iCP(i){
+  var cc=_iCL[i];if(!cc)return;
+  var el=document.getElementById('inv_cat');if(el)el.value=cc;
+  var l=document.getElementById('ac_inv_cat');if(l)l.style.display='none';
+  var n=document.getElementById('inv_name');if(n){invNameAC(n.value);n.focus();}
+}
 var _iNL=[];
-function invNameAC(v){var l=document.getElementById('ac_inv_name');if(!l)return;var q=(v||'').trim().toLowerCase();var cat=(document.getElementById('inv_cat').value||'').trim().toLowerCase();var ms=(DB.inventory||[]).filter(function(i){return(!q||(i.name||'').toLowerCase().indexOf(q)>-1)&&(!cat||(i.category||'').toLowerCase()===cat);}).slice(0,8);if(!ms.length){l.style.display='none';return;}_iNL=ms;var h='';ms.forEach(function(item,i){var qc=item.qty===0?'var(--red)':item.qty<=(item.minQty||3)?'var(--yellow)':'var(--green)';h+='<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmousedown="_iNP('+i+')"><b>'+item.name+'<\/b> - <span style="color:'+qc+'">'+(item.qty===0?'نفد':item.qty+' قطعة')+'<\/span><\/div>';});l.innerHTML=h;l.style.display='block';}
-function _iNP(i){var item=_iNL[i];if(!item)return;var ne=document.getElementById('inv_name'),ce=document.getElementById('inv_cat'),be=document.getElementById('inv_buy'),se=document.getElementById('inv_sell');if(ne)ne.value=item.name;if(ce&&!ce.value)ce.value=item.category||'';if(be&&item.buyPrice)be.value=item.buyPrice;if(se&&item.sellPrice)se.value=item.sellPrice;var l=document.getElementById('ac_inv_name');if(l)l.style.display='none';}
+function invNameAC(v){
+  var l=document.getElementById('ac_inv_name');if(!l)return;
+  var q=(v||'').trim().toLowerCase();
+  var cat=(document.getElementById('inv_cat').value||'').trim().toLowerCase();
+  var ms=(DB.inventory||[]).filter(function(i){return(!q||(i.name||'').toLowerCase().indexOf(q)>-1)&&(!cat||(i.category||'').toLowerCase()===cat);}).slice(0,8);
+  if(!ms.length){l.style.display='none';return;}
+  _iNL=ms;
+  l.innerHTML=ms.map(function(item,i){var qc=item.qty===0?'var(--red)':item.qty<=(item.minQty||3)?'var(--yellow)':'var(--green)';return'<div style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--border)" onmousedown="_iNP('+i+')"><b>'+item.name+'</b> <span style="color:'+qc+';font-size:11px;">'+(item.qty===0?'نفد':item.qty+' قطعة')+'</span></div>';}).join('');
+  l.style.display='block';
+}
+function _iNP(i){
+  var item=_iNL[i];if(!item)return;
+  var ne=document.getElementById('inv_name'),ce=document.getElementById('inv_cat'),be=document.getElementById('inv_buy'),se=document.getElementById('inv_sell');
+  if(ne)ne.value=item.name;
+  if(ce&&!ce.value)ce.value=item.category||'';
+  if(be&&item.buyPrice)be.value=item.buyPrice;
+  if(se&&item.sellPrice)se.value=item.sellPrice;
+  var l=document.getElementById('ac_inv_name');if(l)l.style.display='none';
+}
 
+// ══ addInventory مع دمج ══
 function addInventory(){
   var cat=(document.getElementById('inv_cat').value||'').trim();
   var name=(document.getElementById('inv_name').value||'').trim();
-  if(!cat){alert('يرجى إدخال الصنف');return;}if(!name)name=cat;
+  if(!cat){alert('يرجى إدخال الصنف');return;}
+  if(!name)name=cat;
   var qty=+document.getElementById('inv_qty').value||0;
   var buyP=+document.getElementById('inv_buy').value||0;
   var sellP=+document.getElementById('inv_sell').value||0;
-  var minEl=document.getElementById('inv_min');var minV=minEl?+minEl.value:3;if(isNaN(minV)||minV<0)minV=3;
+  var minEl=document.getElementById('inv_min');
+  var minV=minEl?+minEl.value:3;if(isNaN(minV)||minV<0)minV=3;
   var nameN=name.trim().toLowerCase().replace(/ +/g,'');
   var catN=cat.trim().toLowerCase();
-  var existing=DB.inventory.find(function(i){return (i.name||'').trim().toLowerCase().replace(/ +/g,'')===nameN&&(i.category||'').trim().toLowerCase()===catN;});
-  if(existing){existing.qty+=qty;if(buyP>0)existing.buyPrice=buyP;if(sellP>0)existing.sellPrice=sellP;
-    saveDB();['inv_name','inv_cat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var existing=DB.inventory.find(function(i){return(i.name||'').trim().toLowerCase().replace(/ +/g,'')===nameN&&(i.category||'').trim().toLowerCase()===catN;});
+  if(existing){
+    existing.qty+=qty;
+    if(buyP>0)existing.buyPrice=buyP;
+    if(sellP>0)existing.sellPrice=sellP;
+    saveDB();
+    ['inv_name','inv_cat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
     ['inv_qty','inv_buy','inv_sell'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=0;});
-    if(minEl)minEl.value=3;toggleForm('invForm');renderPage('inventory');
-    toast('✅ تمت إضافة '+qty+' للمخزون الموجود: '+name,'green');return;}
-  var id2=Date.now();
+    if(minEl)minEl.value=3;
+    toggleForm('invForm');renderPage('inventory');
+    toast('✅ تمت إضافة '+qty+' للمخزون: '+name,'green');return;
+  }
+  var id2=Date.now()+Math.floor(Math.random()*9999);
   DB.inventory.unshift({id:id2,name:name,category:cat,qty:qty,buyPrice:buyP,sellPrice:sellP,minQty:minV,created:todayISO()});
-  saveDB();['inv_name','inv_cat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  saveDB();
+  ['inv_name','inv_cat'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['inv_qty','inv_buy','inv_sell'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=0;});
-  if(minEl)minEl.value=3;toggleForm('invForm');renderPage('inventory');
-  toast('✅ تمت إضافة '+name+' للمخزون','green');
+  if(minEl)minEl.value=3;
+  toggleForm('invForm');renderPage('inventory');
+  toast('✅ تمت إضافة '+name,'green');
 }
 
-function balSaveState(){if(!DB.config)DB.config={};var fields={};['bal_balance_open','bal_balance_added','bal_sabafon_open','bal_sabafon_added','bal_expense_open','bal_sim_you_qty','bal_sim_you_price','bal_sim_sabafon_qty','bal_sim_sabafon_price','bal_sim_yemenmobile_qty','bal_sim_yemenmobile_price','bal_daily_sales','bal_balance_remain','bal_sabafon_remain','bal_expense_now','bal_cash_now'].forEach(function(id){var el=document.getElementById(id);if(el&&el.value!==undefined&&el.value!=='')fields[id]=el.value;});DB.config.balToday={date:todayISO(),debts:JSON.parse(JSON.stringify(balDebts)),received:JSON.parse(JSON.stringify(balReceived)),expenses:JSON.parse(JSON.stringify(balExpenses)),fields:fields};saveDB();}
-function renderBalancePage(){var today=todayISO();try{var raw=localStorage.getItem(SAVE_KEY);if(raw){var ldb=JSON.parse(raw);if(ldb.config&&ldb.config.balToday){if(!DB.config)DB.config={};DB.config.balToday=ldb.config.balToday;}}}catch(e){}var saved=DB.config&&DB.config.balToday;var hasToday=saved&&saved.date===today;if(hasToday){balDebts=saved.debts||[];balReceived=saved.received||[];balExpenses=saved.expenses||[];if(saved.fields)Object.keys(saved.fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=saved.fields[id];});var nd=DB.config&&DB.config.balNextDay;if(nd){['bal_balance_open','bal_sabafon_open','bal_expense_open'].forEach(function(id){var el=document.getElementById(id);var set=saved.fields&&saved.fields[id]&&+saved.fields[id]!==0;if(el&&nd[id]!==undefined&&!set)el.value=nd[id];});}}else{balDebts=[];balReceived=[];balExpenses=[];balLoadNextDay();}balRenderDebts();balRenderReceived();balRenderExpenses();balRenderRecords();balCalc();}
+// ══ حذف المخزون ══
+function deleteInvItem(id){
+  if(!isManager()){toast('⛔ للمدير فقط','red');return;}
+  var numId=typeof id==='number'?id:+id;
+  var idx=DB.inventory.findIndex(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(idx<0){toast('الصنف غير موجود','yellow');return;}
+  var name=DB.inventory[idx].name;
+  if(!confirm('حذف "'+name+'" من المخزون؟'))return;
+  DB.inventory.splice(idx,1);
+  saveDB();renderPage('inventory');
+  toast('🗑 تم حذف: '+name,'red');
+}
 
-function deleteLedgerEntry(accId,idx2){if(!confirm('حذف هذه الحركة؟'))return;var L=getLedger(accId);if(idx2<0||idx2>=L.length)return;L.splice(idx2,1);var r2=0;L.forEach(function(e){r2+=e.debit-e.credit;e.balance=r2;});syncBalance(accId);saveDB();renderModalContent();renderPage(activeAccType==='customer'?'debts':'supDebts');toast('تم الحذف','green');}
-function editLedgerEntry(accId,idx2){var L=getLedger(accId);if(idx2<0||idx2>=L.length)return;var entry=L[idx2];var nd=prompt('البيان:',entry.desc);if(nd===null)return;var na=prompt(entry.debit>0?'المبلغ المدين:':'المبلغ الدائن:',entry.debit>0?entry.debit:entry.credit);if(na===null)return;var amt=parseFloat(na)||0;if(amt<=0){alert('مبلغ غير صحيح');return;}entry.desc=nd.trim()||entry.desc;if(entry.debit>0)entry.debit=amt;else entry.credit=amt;var r2=0;L.forEach(function(e){r2+=e.debit-e.credit;e.balance=r2;});syncBalance(accId);saveDB();renderModalContent();renderPage(activeAccType==='customer'?'debts':'supDebts');toast('تم التعديل','green');}
+// ══ deleteRow محسّنة ══
+function deleteRow(arr,id,page){
+  if(!isManager()){toast('⛔ للمدير فقط','red');return;}
+  var numId=typeof id==='number'?id:+id;
+  var idx=arr.findIndex(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(idx<0){toast('العنصر غير موجود','yellow');return;}
+  if(!confirm('تأكيد الحذف؟'))return;
+  arr.splice(idx,1);
+  saveDB();renderPage(page);
+  toast('🗑 تم الحذف','red');
+}
 
-function empStatement(empId){var emp=(DB.employees||[]).find(function(e){return e.id===empId;});if(!emp)return;var biz=(DB.config&&DB.config.bizName)||'مركز أمواج الخليج';var cur=(DB.config&&DB.config.currency)||'ر.ي';var pays=(DB.expHistory||[]).filter(function(h){return h.empId===empId;});var tot=pays.reduce(function(s,h){return s+h.amt;},0);var td=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});var rows=pays.map(function(h){return '<tr><td>'+h.date+'<\/td><td>'+(h.note||h.type)+'<\/td><td>'+fmt(h.amt)+' '+cur+'<\/td><\/tr>';}).join('');var html='<html lang=ar dir=rtl><head><meta charset=UTF-8><style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc}@media print{body{background:#fff}}<\/style><\/head><body><h2>'+biz+'<\/h2><h3>كشف راتب: '+emp.name+'<\/h3><p>'+emp.role+' | الراتب: '+fmt(emp.salary)+' '+cur+' | إجمالي المسحوب: '+fmt(tot)+' '+cur+'<\/p>'+(rows?'<table><tr><th>التاريخ<\/th><th>البيان<\/th><th>المبلغ<\/th><\/tr>'+rows+'<\/table>':'<p>لا توجد حركات<\/p>')+'<br><button onclick="window.print()">طباعة<\/button><\/body><\/html>';var w=window.open('','_blank');if(!w){toast('السماح بالنوافذ','yellow');return;}w.document.write(html);w.document.close();}
-function editEmployee(empId){var emp=(DB.employees||[]).find(function(e){return e.id===empId;});if(!emp)return;var name=prompt('اسم الموظف:',emp.name);if(!name||!name.trim())return;var role=prompt('المنصب:',emp.role||'');if(role===null)return;var sal=prompt('الراتب الشهري:',emp.salary);if(sal===null)return;var s=+sal;if(s<0){toast('راتب غير صحيح','yellow');return;}emp.name=name.trim();emp.role=role.trim()||emp.role;emp.salary=s;saveDB();renderEmployees();toast('✅ تم التعديل','green');}
+// ══ حذف المبيعات + الفاتورة ══
+function deleteSaleRow(id){
+  if(!isManager()){toast('⛔ للمدير فقط','red');return;}
+  var numId=typeof id==='number'?id:+id;
+  if(!confirm('حذف هذه المبيعة والفاتورة؟'))return;
+  var si=DB.sales.findIndex(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(si>-1)DB.sales.splice(si,1);
+  var ii=DB.invoices.findIndex(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(ii>-1)DB.invoices.splice(ii,1);
+  saveDB();renderPage('sales');
+  toast('🗑 تم الحذف','red');
+}
 
-function rentStatement(rentId){var item=(DB.rentItems||[]).find(function(i){return i.id===rentId;});if(!item)return;var biz=(DB.config&&DB.config.bizName)||'مركز أمواج الخليج';var cur=(DB.config&&DB.config.currency)||'ر.ي';var pays=(DB.expHistory||[]).filter(function(h){return h.rentId===rentId;});var tot=pays.reduce(function(s,h){return s+h.amt;},0);var td=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});var rows=pays.map(function(h){return '<tr><td>'+h.date+'<\/td><td>'+(h.note||h.type)+'<\/td><td>'+fmt(h.amt)+' '+cur+'<\/td><\/tr>';}).join('');var html='<html lang=ar dir=rtl><head><meta charset=UTF-8><style>body{font-family:Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc}@media print{body{background:#fff}}<\/style><\/head><body><h2>'+biz+'<\/h2><h3>كشف إيجار: '+item.name+'<\/h3>'+(item.owner?'<p>المستفيد: '+item.owner+'<\/p>':'')+'<p>الإيجار الشهري: '+fmt(item.amt)+' '+cur+' | إجمالي المدفوع: '+fmt(tot)+' '+cur+'<\/p>'+(rows?'<table><tr><th>التاريخ<\/th><th>البيان<\/th><th>المبلغ<\/th><\/tr>'+rows+'<\/table>':'<p>لا توجد مدفوعات<\/p>')+'<br><button onclick="window.print()">طباعة<\/button><\/body><\/html>';var w=window.open('','_blank');if(!w){toast('السماح بالنوافذ','yellow');return;}w.document.write(html);w.document.close();}
-function editRentItem(rentId){var item=(DB.rentItems||[]).find(function(i){return i.id===rentId;});if(!item)return;var name=prompt('اسم الإيجار:',item.name);if(!name||!name.trim())return;var owner=prompt('المستفيد:',item.owner||'');if(owner===null)return;var amt=prompt('المبلغ الشهري:',item.amt);if(amt===null)return;var a=+amt;if(a<=0){toast('مبلغ غير صحيح','yellow');return;}var due=prompt('يوم الاستحقاق:',item.dueday||1);if(due===null)return;item.name=name.trim();item.owner=owner.trim();item.amt=a;item.dueday=Math.min(31,Math.max(1,+due||1));saveDB();renderRentItems();toast('✅ تم التعديل','green');}
+// ══ حذف المشتريات ══
+function deletePurchase(id){
+  if(!isManager()){toast('⛔ للمدير فقط','red');return;}
+  var numId=typeof id==='number'?id:+id;
+  var idx=DB.purchases.findIndex(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(idx<0){toast('الفاتورة غير موجودة','yellow');return;}
+  if(!confirm('حذف هذه الفاتورة نهائياً؟'))return;
+  DB.purchases.splice(idx,1);
+  saveDB();renderPage('purchases');
+  toast('🗑 تم الحذف','red');
+}
 
-// saveDB آمن - لا يحذف البيانات أبداً
+// ══ تعديل دفعة المشتريات ══
+function editPurchPayment(id){
+  var numId=typeof id==='number'?id:+id;
+  var p=DB.purchases.find(function(x){return x.id===numId||String(x.id)===String(id);});
+  if(!p)return;
+  var newPaid=prompt('المبلغ المدفوع (الإجمالي: '+fmt(p.total)+' '+CUR+'):', p.paid);
+  if(newPaid===null)return;
+  var paid=Math.max(0,Math.min(p.total,+newPaid||0));
+  var oldPaid=p.paid;
+  p.paid=paid;p.remain=Math.max(0,p.total-paid);
+  p.status=paid>=p.total?'مكتمل':paid>0?'جزئي':'آجل';
+  if(paid!==oldPaid&&p.supId){
+    var diff=paid-oldPaid;
+    if(diff>0){pushLedger(p.supId,'دفعة','دفعة إضافية — فاتورة '+p.invNo,0,diff);syncBalance(p.supId);}
+  }
+  saveDB();renderPage('purchases');
+  toast('✅ تم تحديث الدفع: '+fmt(paid)+' '+CUR,'green');
+}
+
+// ══ saveDB آمن — لا يحذف بيانات أبداً ══
 (function(){
-  var _os=window.saveDB;
+  var _origSave=window.saveDB;
   window.saveDB=function(){
     try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}
     catch(e){
-      var kr=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k!==SAVE_KEY&&k.indexOf('amwaj')===-1)kr.push(k);}
-      kr.forEach(function(k){try{localStorage.removeItem(k);}catch(ex){}});
+      // ذاكرة ممتلئة — احذف مفاتيح أخرى فقط
+      for(var i=localStorage.length-1;i>=0;i--){
+        var k=localStorage.key(i);
+        if(k&&k!==SAVE_KEY&&k.indexOf('amwaj')===-1){
+          try{localStorage.removeItem(k);}catch(ex){}
+        }
+      }
       try{localStorage.setItem(SAVE_KEY,JSON.stringify(DB));}catch(e2){}
     }
     if(typeof amwajPush==='function')amwajPush();
   };
 })();
 
-// ══ رفع فقط - بدون سحب تلقائي ══
+// ══ amwajPull: رفع فقط — بدون سحب تلقائي ══
 (function(){
-  // أوقف كل المزامنة التلقائية القديمة
-  if(typeof _amwajT!=='undefined'){clearInterval(_amwajT);}
-  
-  // amwajPull: يرفع فقط - لا يسحب ولا يغير البيانات المحلية
-  window.amwajPull=function(){
-    if(typeof amwajPush==='function') amwajPush();
-  };
-  
-  // رفع تلقائي كل 15 ثانية فقط (بدون سحب)
-  _amwajT=setInterval(function(){
-    if(navigator.onLine && typeof amwajPush==='function') amwajPush();
-  }, 15000);
+  if(typeof _amwajT!=='undefined')clearInterval(_amwajT);
+  window.amwajPull=function(){if(typeof amwajPush==='function')amwajPush();};
+  _amwajT=setInterval(function(){if(navigator.onLine&&typeof amwajPush==='function')amwajPush();},20000);
 })();
 
-// PWA
+// ══ استرجاع من Firebase يدوياً ══
+function restoreFromFirebase(){
+  if(!navigator.onLine){toast('لا يوجد إنترنت','yellow');return;}
+  if(!confirm('استرجاع البيانات من السحابة؟\nسيتم دمج السحابة مع المحلي بأمان'))return;
+  toast('⏳ جاري الاسترجاع...','yellow');
+  fetch('https://amwaj-7652d-default-rtdb.firebaseio.com/amwaj_db.json')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d||typeof d!=='object'){toast('لا توجد بيانات في السحابة','yellow');return;}
+    var added=0;
+    // دمج arrays
+    ['sales','purchases','returns','invoices','balanceRecords','stockLedger',
+     'salesDeductions','withdrawals','employees','rentItems','expHistory',
+     'suppliers','customers','inventory','users'].forEach(function(k){
+      if(!d[k]||!Array.isArray(d[k])||d[k].length===0)return;
+      if(!DB[k]||!Array.isArray(DB[k]))DB[k]=[];
+      var ids=new Set(DB[k].map(function(x){return String(x.id||'');}));
+      d[k].forEach(function(x){if(x.id&&!ids.has(String(x.id))){DB[k].push(x);ids.add(String(x.id));added++;}});
+    });
+    // دمج المفاتيح
+    if(d.keys&&typeof d.keys==='object'){
+      if(!DB.keys)DB.keys={types:[],sales:[],stockEntries:[],withdrawals:[]};
+      ['types','sales','stockEntries','withdrawals'].forEach(function(k){
+        if(!d.keys[k]||!Array.isArray(d.keys[k]))return;
+        if(!DB.keys[k])DB.keys[k]=[];
+        var ids=new Set(DB.keys[k].map(function(x){return String(x.id||'');}));
+        d.keys[k].forEach(function(x){if(x.id&&!ids.has(String(x.id))){DB.keys[k].push(x);ids.add(String(x.id));added++;}});
+      });
+    }
+    // دمج دفتر الأستاذ
+    if(d.ledger&&typeof d.ledger==='object'){
+      if(!DB.ledger)DB.ledger={};
+      Object.keys(d.ledger).forEach(function(aid){
+        if(!DB.ledger[aid]){DB.ledger[aid]=d.ledger[aid];added++;}
+        else{
+          var sigs=new Set(DB.ledger[aid].map(function(e){return e.date+'|'+e.debit+'|'+e.credit;}));
+          (d.ledger[aid]||[]).forEach(function(e){
+            var sig=e.date+'|'+e.debit+'|'+e.credit;
+            if(!sigs.has(sig)){DB.ledger[aid].push(e);sigs.add(sig);added++;}
+          });
+        }
+      });
+      // إعادة حساب الأرصدة
+      Object.keys(DB.ledger).forEach(function(aid){
+        var acc=(DB.customers||[]).find(function(x){return x.id===+aid;})||(DB.suppliers||[]).find(function(x){return x.id===+aid;});
+        if(acc&&DB.ledger[aid]&&DB.ledger[aid].length>0){
+          var last=DB.ledger[aid][DB.ledger[aid].length-1];
+          if(last&&last.balance!==undefined)acc.debt=last.balance;
+        }
+      });
+    }
+    // دمج customers: تحديث الديون
+    if(d.customers&&Array.isArray(d.customers)){
+      d.customers.forEach(function(rc){
+        var lc=DB.customers.find(function(x){return x.id===rc.id;});
+        if(lc&&rc.debt>lc.debt){lc.debt=rc.debt;}
+      });
+    }
+    if(d.suppliers&&Array.isArray(d.suppliers)){
+      d.suppliers.forEach(function(rs){
+        var ls=DB.suppliers.find(function(x){return x.id===rs.id;});
+        if(ls&&rs.debt>ls.debt){ls.debt=rs.debt;}
+      });
+    }
+    saveDB();
+    try{var p=document.querySelector('.page.active');if(p)renderPage(p.id.replace('page-',''));}catch(e){}
+    if(typeof renderDashboard==='function')try{renderDashboard();}catch(e){}
+    toast('✅ تم الاسترجاع — '+added+' سجل جديد','green');
+  })
+  .catch(function(e){toast('❌ فشل: '+e.message,'red');});
+}
+
+// ══ balSaveState ══
+function balSaveState(){
+  if(!DB.config)DB.config={};
+  var fields={};
+  ['bal_balance_open','bal_balance_added','bal_sabafon_open','bal_sabafon_added','bal_expense_open',
+   'bal_sim_you_qty','bal_sim_you_price','bal_sim_sabafon_qty','bal_sim_sabafon_price',
+   'bal_sim_yemenmobile_qty','bal_sim_yemenmobile_price','bal_daily_sales',
+   'bal_balance_remain','bal_sabafon_remain','bal_expense_now','bal_cash_now'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&el.value!==undefined&&el.value!=='')fields[id]=el.value;
+  });
+  DB.config.balToday={date:todayISO(),debts:JSON.parse(JSON.stringify(balDebts)),received:JSON.parse(JSON.stringify(balReceived)),expenses:JSON.parse(JSON.stringify(balExpenses)),fields:fields};
+  saveDB();
+}
+
+// ══ renderBalancePage ══
+function renderBalancePage(){
+  var today=todayISO();
+  try{var raw=localStorage.getItem(SAVE_KEY);if(raw){var ldb=JSON.parse(raw);if(ldb.config&&ldb.config.balToday){if(!DB.config)DB.config={};DB.config.balToday=ldb.config.balToday;}}}catch(e){}
+  var saved=DB.config&&DB.config.balToday;
+  var hasToday=saved&&saved.date===today;
+  if(hasToday){
+    balDebts=saved.debts||[];balReceived=saved.received||[];balExpenses=saved.expenses||[];
+    if(saved.fields)Object.keys(saved.fields).forEach(function(id){var el=document.getElementById(id);if(el)el.value=saved.fields[id];});
+    var nd=DB.config&&DB.config.balNextDay;
+    if(nd){['bal_balance_open','bal_sabafon_open','bal_expense_open'].forEach(function(id){var el=document.getElementById(id);var set=saved.fields&&saved.fields[id]&&+saved.fields[id]!==0;if(el&&nd[id]!==undefined&&!set)el.value=nd[id];});}
+  }else{balDebts=[];balReceived=[];balExpenses=[];balLoadNextDay();}
+  balRenderDebts();balRenderReceived();balRenderExpenses();balRenderRecords();balCalc();
+}
+
+// ══ deleteLedgerEntry ══
+function deleteLedgerEntry(accId,idx2){
+  if(!confirm('حذف هذه الحركة؟'))return;
+  var L=getLedger(accId);if(idx2<0||idx2>=L.length)return;
+  L.splice(idx2,1);
+  var r2=0;L.forEach(function(e){r2+=e.debit-e.credit;e.balance=r2;});
+  syncBalance(accId);saveDB();
+  renderModalContent();
+  renderPage(activeAccType==='customer'?'debts':'supDebts');
+  toast('تم الحذف','green');
+}
+function editLedgerEntry(accId,idx2){
+  var L=getLedger(accId);if(idx2<0||idx2>=L.length)return;
+  var entry=L[idx2];
+  var nd=prompt('البيان:',entry.desc);if(nd===null)return;
+  var na=prompt(entry.debit>0?'المبلغ المدين:':'المبلغ الدائن:',entry.debit>0?entry.debit:entry.credit);if(na===null)return;
+  var amt=parseFloat(na)||0;if(amt<=0){alert('مبلغ غير صحيح');return;}
+  entry.desc=nd.trim()||entry.desc;
+  if(entry.debit>0)entry.debit=amt;else entry.credit=amt;
+  var r2=0;L.forEach(function(e){r2+=e.debit-e.credit;e.balance=r2;});
+  syncBalance(accId);saveDB();
+  renderModalContent();
+  renderPage(activeAccType==='customer'?'debts':'supDebts');
+  toast('تم التعديل','green');
+}
+
+// ══ empStatement + editEmployee ══
+function empStatement(empId){
+  var emp=(DB.employees||[]).find(function(e){return e.id===empId;});if(!emp)return;
+  var biz=(DB.config&&DB.config.bizName)||'مركز أمواج الخليج';
+  var cur=(DB.config&&DB.config.currency)||'ر.ي';
+  var pays=(DB.expHistory||[]).filter(function(h){return h.empId===empId;});
+  var tot=pays.reduce(function(s,h){return s+h.amt;},0);
+  var rows=pays.map(function(h){return '<tr><td>'+h.date+'</td><td>'+(h.note||h.type)+'</td><td style="color:green;font-weight:700">'+fmt(h.amt)+' '+cur+'</td></tr>';}).join('');
+  var html='<html lang=ar dir=rtl><head><meta charset=UTF-8><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Cairo,Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc;text-align:right}@media print{button{display:none}}</style></head><body><h2>'+biz+'</h2><h3>كشف راتب: '+emp.name+'</h3><p>المنصب: '+emp.role+' | الراتب: '+fmt(emp.salary)+' '+cur+' | المسحوب: '+fmt(tot)+' '+cur+'</p>'+(rows?'<table><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th></tr>'+rows+'</table>':'<p>لا توجد حركات</p>')+'<br><button onclick="window.print()">طباعة</button></body></html>';
+  var w=window.open('','_blank');if(!w){toast('اسمح بالنوافذ','yellow');return;}w.document.write(html);w.document.close();
+}
+function editEmployee(empId){
+  var emp=(DB.employees||[]).find(function(e){return e.id===empId;});if(!emp)return;
+  var name=prompt('اسم الموظف:',emp.name);if(!name||!name.trim())return;
+  var role=prompt('المنصب:',emp.role||'');if(role===null)return;
+  var sal=prompt('الراتب الشهري:',emp.salary);if(sal===null)return;
+  var s=+sal;if(s<0){toast('راتب غير صحيح','yellow');return;}
+  emp.name=name.trim();emp.role=role.trim()||emp.role;emp.salary=s;
+  saveDB();renderEmployees();toast('✅ تم التعديل','green');
+}
+
+// ══ rentStatement + editRentItem ══
+function rentStatement(rentId){
+  var item=(DB.rentItems||[]).find(function(i){return i.id===rentId;});if(!item)return;
+  var biz=(DB.config&&DB.config.bizName)||'مركز أمواج الخليج';
+  var cur=(DB.config&&DB.config.currency)||'ر.ي';
+  var pays=(DB.expHistory||[]).filter(function(h){return h.rentId===rentId;});
+  var tot=pays.reduce(function(s,h){return s+h.amt;},0);
+  var rows=pays.map(function(h){return '<tr><td>'+h.date+'</td><td>'+(h.note||h.type)+'</td><td style="color:green;font-weight:700">'+fmt(h.amt)+' '+cur+'</td></tr>';}).join('');
+  var html='<html lang=ar dir=rtl><head><meta charset=UTF-8><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"><style>body{font-family:Cairo,Arial,sans-serif;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}td,th{padding:8px;border:1px solid #ccc;text-align:right}@media print{button{display:none}}</style></head><body><h2>'+biz+'</h2><h3>كشف إيجار: '+item.name+'</h3>'+(item.owner?'<p>المستفيد: '+item.owner+'</p>':'')+'<p>الإيجار: '+fmt(item.amt)+' '+cur+' | المدفوع: '+fmt(tot)+' '+cur+'</p>'+(rows?'<table><tr><th>التاريخ</th><th>البيان</th><th>المبلغ</th></tr>'+rows+'</table>':'<p>لا توجد مدفوعات</p>')+'<br><button onclick="window.print()">طباعة</button></body></html>';
+  var w=window.open('','_blank');if(!w){toast('اسمح بالنوافذ','yellow');return;}w.document.write(html);w.document.close();
+}
+function editRentItem(rentId){
+  var item=(DB.rentItems||[]).find(function(i){return i.id===rentId;});if(!item)return;
+  var name=prompt('اسم الإيجار:',item.name);if(!name||!name.trim())return;
+  var owner=prompt('المستفيد:',item.owner||'');if(owner===null)return;
+  var amt=prompt('المبلغ الشهري:',item.amt);if(amt===null)return;
+  var a=+amt;if(a<=0){toast('مبلغ غير صحيح','yellow');return;}
+  var due=prompt('يوم الاستحقاق:',item.dueday||1);if(due===null)return;
+  item.name=name.trim();item.owner=owner.trim();item.amt=a;item.dueday=Math.min(31,Math.max(1,+due||1));
+  saveDB();renderRentItems();toast('✅ تم التعديل','green');
+}
+
+// ══ تعديل الأنواع في المفاتيح ══
+function editKeyType(id){
+  var k=keysDB();var t=k.types.find(function(x){return x.id===id;});if(!t)return;
+  var newName=prompt('اسم النوع:',t.name);if(newName===null)return;if(!newName.trim()){toast('⚠ أدخل اسماً','yellow');return;}
+  var newQty=prompt('الكمية المتوفرة ('+t.qty+'):', t.qty);if(newQty===null)return;
+  var q=Math.max(0,+newQty||0);
+  t.name=newName.trim();t.qty=q;
+  k.sales.forEach(function(s){if(s.typeId===id)s.typeName=t.name;});
+  (k.stockEntries||[]).forEach(function(e){if(e.typeId===id)e.typeName=t.name;});
+  saveDB();renderKeyStockTab();renderKeyTypeSelects();
+  if(typeof renderKeySaleRows==='function')renderKeySaleRows();
+  toast('✅ تم التعديل: '+t.name,'green');
+}
+function deleteKeyStockEntry(id){
+  if(!confirm('حذف هذه الحركة؟ سيتم خصم الكمية'))return;
+  var k=keysDB();
+  var e=(k.stockEntries||[]).find(function(x){return x.id===id;});
+  if(e){var t=k.types.find(function(x){return x.id===e.typeId;});if(t)t.qty=Math.max(0,t.qty-e.qty);}
+  k.stockEntries=(k.stockEntries||[]).filter(function(x){return x.id!==id;});
+  saveDB();renderKeyStockTab();
+  toast('🗑 تم الحذف','red');
+}
+
+// ══ PDF كشف الحساب - HTML عربي ══
+function doExportPDF(id,type){
+  var e=(type==='customer'?DB.customers:DB.suppliers).find(function(x){return x.id===id;});if(!e)return;
+  var L=getLedger(id);
+  var bizName=(DB.config&&DB.config.bizName)||'مركز أمواج الخليج';
+  var cur=(DB.config&&DB.config.currency)||'ر.ي';
+  var typeLbl=type==='customer'?'العميل':'المورد';
+  var tD=L.reduce(function(s,x){return s+x.debit;},0);
+  var tC=L.reduce(function(s,x){return s+x.credit;},0);
+  var today2=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  var rows2=L.map(function(x){return '<tr><td>'+x.date+'</td><td>'+x.desc+'</td><td>'+x.type+'</td><td style="color:#c00">'+(x.debit>0?fmt(x.debit)+' '+cur:'—')+'</td><td style="color:#080">'+(x.credit>0?fmt(x.credit)+' '+cur:'—')+'</td><td style="color:#a60;font-weight:700">'+fmt(x.balance)+' '+cur+'</td></tr>';}).join('');
+  var html='<html lang=ar dir=rtl><head><meta charset=UTF-8><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Cairo,Arial,sans-serif;background:#fff;color:#111;padding:24px;direction:rtl}.hdr{text-align:center;border-bottom:3px solid #1a2e6e;padding-bottom:16px;margin-bottom:20px}.bn{font-size:22px;font-weight:900;color:#1a2e6e}.sub{font-size:13px;color:#444;margin-top:6px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.card{border:2px solid #ddd;border-radius:10px;padding:14px;text-align:center}.cl{font-size:11px;color:#666;margin-bottom:6px}.cv{font-size:18px;font-weight:900}table{width:100%;border-collapse:collapse;font-size:12px}th{padding:10px 8px;background:#1a2e6e;color:#fff;text-align:right;font-weight:700}td{padding:8px;border-bottom:1px solid #eee;text-align:right}tr:nth-child(even){background:#f9f9f9}@media print{button{display:none!important}}</style></head><body><div class=hdr><div class=bn>'+bizName+'</div><div class=sub>كشف حساب '+typeLbl+': <strong>'+e.name+'</strong>'+(e.phone?' | هاتف: '+e.phone:'')+'</div><div class=sub>'+today2+'</div></div><div class=cards><div class=card><div class=cl>إجمالي الديون</div><div class=cv style="color:#c00">'+fmt(tD)+' '+cur+'</div></div><div class=card><div class=cl>إجمالي المدفوع</div><div class=cv style="color:#080">'+fmt(tC)+' '+cur+'</div></div><div class=card><div class=cl>الرصيد المتبقي</div><div class=cv style="color:#a60">'+fmt(e.debt)+' '+cur+'</div></div></div>'+(L.length?'<table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead><tbody>'+rows2+'</tbody></table>':'<p style="text-align:center;padding:30px;color:#888">لا توجد حركات</p>')+'<div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="background:#1a2e6e;color:#fff;border:none;border-radius:8px;padding:12px 32px;font-family:Cairo,Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer">طباعة / حفظ PDF</button></div></body></html>';
+  var w=window.open('','_blank');if(!w){toast('اسمح بالنوافذ المنبثقة','yellow');return;}
+  w.document.write(html);w.document.close();
+}
+
+// ══ PWA ══
 var _dPr=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_dPr=e;var b=document.getElementById('_installBtn');if(b)b.style.display='flex';});
-function installApp(){if(!_dPr){alert('اضغط قائمة Chrome ثم اختر تثبيت التطبيق');return;}_dPr.prompt();_dPr.userChoice.then(function(r){if(r.outcome==='accepted'&&typeof toast==='function')toast('✅ تم التثبيت','green');_dPr=null;var b=document.getElementById('_installBtn');if(b)b.style.display='none';});}
+function installApp(){if(!_dPr){alert('اضغط قائمة Chrome ثم اختر تثبيت');return;}_dPr.prompt();_dPr.userChoice.then(function(r){if(r.outcome==='accepted'&&typeof toast==='function')toast('✅ تم التثبيت','green');_dPr=null;});}
 window.addEventListener('appinstalled',function(){if(typeof toast==='function')toast('✅ تم تثبيت أمواج الخليج','green');});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').then(function(){}).catch(function(){});}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').then(function(){}).catch(function(){});
+
 </script>
 </body>
 </html>
