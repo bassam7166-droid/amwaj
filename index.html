@@ -2859,30 +2859,6 @@ function addCustomer(){
   saveDB();
   toggleForm('custForm'); renderPage('customers');
 }
-function addInventory(){
-  var name=(document.getElementById('inv_name').value||'').trim();
-  var cat=(document.getElementById('inv_cat').value||'').trim();
-  if(!name||!cat){alert('يرجى إدخال الاسم والصنف');return;}
-  var minEl=document.getElementById('inv_min');
-  var minV=minEl?+minEl.value:3; if(isNaN(minV)||minV<0)minV=3;
-  DB.inventory.push({
-    id:Date.now(), name:name, category:cat,
-    qty:+document.getElementById('inv_qty').value||0,
-    buyPrice:+document.getElementById('inv_buy').value||0,
-    sellPrice:+document.getElementById('inv_sell').value||0,
-    minQty:minV
-  });
-  document.getElementById('inv_name').value='';
-  document.getElementById('inv_cat').value='';
-  document.getElementById('inv_qty').value=0;
-  document.getElementById('inv_buy').value=0;
-  document.getElementById('inv_sell').value=0;
-  if(minEl) minEl.value=3;
-  saveDB();
-  toggleForm('invForm');
-  renderPage('inventory');
-  toast('تمت اضافة '+name+' للمخزون','green');
-}
 function addReturn(){
   const retType=document.getElementById('ret_type').value;
   const itemName=document.getElementById('ret_item').value.trim()||'—';
@@ -2974,60 +2950,6 @@ function settleDebt(id,type){
 // ═══════════════════════════════════════
 // PDF + WHATSAPP
 // ═══════════════════════════════════════
-function doExportPDF(id,type){
-  var e=(type==='customer'?DB.customers:DB.suppliers).find(function(x){return x.id===id;});
-  if(!e)return;
-  var L=getLedger(id);
-  var bizCfg=DB.config||{};
-  var bizName=bizCfg.bizName||'مركز امواج الخليج للالكترونيات';
-  var cur=bizCfg.currency||'ر.ي';
-  var typeLbl=type==='customer'?'العميل':'المورد';
-  var jsPDF2=window.jspdf.jsPDF;
-  var doc=new jsPDF2({orientation:'portrait',unit:'mm',format:'a4'});
-  doc.setFillColor(7,9,15); doc.rect(0,0,210,297,'F');
-  doc.setFillColor(13,17,23); doc.rect(0,0,210,52,'F');
-  doc.setTextColor(0,200,255); doc.setFontSize(15); doc.setFont('helvetica','bold');
-  doc.text(bizName,105,13,{align:'center'});
-  doc.setTextColor(180,200,220); doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text('كشف حساب - '+typeLbl+': '+e.name,105,20,{align:'center'});
-  var phoneStr=e.phone?'الهاتف: '+e.phone+'   |   ':'';
-  doc.text(phoneStr+'التاريخ: '+new Date().toLocaleDateString('ar-SA'),105,27,{align:'center'});
-  var tD=L.reduce(function(s,x){return s+x.debit;},0);
-  var tC=L.reduce(function(s,x){return s+x.credit;},0);
-  var cards=[
-    ['اجمالي الديون',fmt(tD)+' '+cur,[255,77,109],14],
-    ['اجمالي المدفوع',fmt(tC)+' '+cur,[0,229,160],84],
-    ['الرصيد المتبقي',fmt(e.debt)+' '+cur,[255,194,62],154]
-  ];
-  cards.forEach(function(card){
-    doc.setFillColor(20,30,50); doc.roundedRect(card[3],33,52,15,3,3,'F');
-    doc.setTextColor(100,130,160); doc.setFontSize(7); doc.setFont('helvetica','normal');
-    doc.text(card[0],card[3]+4,39);
-    doc.setTextColor(card[2][0],card[2][1],card[2][2]); doc.setFontSize(10); doc.setFont('helvetica','bold');
-    doc.text(card[1],card[3]+4,46);
-  });
-  if(L.length){
-    doc.setTextColor(180,200,220); doc.setFontSize(9); doc.setFont('helvetica','bold');
-    doc.text('سجل الحركات المالية',14,60);
-    doc.autoTable({
-      startY:63,
-      head:[['التاريخ','البيان','النوع','مدين','دائن','الرصيد']],
-      body:L.map(function(x){return[x.date,x.desc,x.type,x.debit>0?fmt(x.debit)+' '+cur:'—',x.credit>0?fmt(x.credit)+' '+cur:'—',fmt(x.balance)+' '+cur];}),
-      styles:{font:'helvetica',fontSize:8,textColor:[180,200,220],fillColor:[13,17,23],lineColor:[26,37,64],lineWidth:0.3},
-      headStyles:{fillColor:[14,32,64],textColor:[0,200,255],fontStyle:'bold'},
-      alternateRowStyles:{fillColor:[15,22,36]},
-      columnStyles:{3:{textColor:[255,77,109]},4:{textColor:[0,229,160]},5:{textColor:[255,194,62]}},
-      margin:{left:14,right:14}
-    });
-  } else {
-    doc.setTextColor(100,130,160); doc.setFontSize(9);
-    doc.text('لا توجد حركات مالية مسجلة',105,70,{align:'center'});
-  }
-  doc.setFillColor(20,30,50); doc.rect(0,275,210,22,'F');
-  doc.setTextColor(80,100,130); doc.setFontSize(7); doc.setFont('helvetica','normal');
-  doc.text(bizName+' | '+new Date().toLocaleDateString('ar-SA'),105,284,{align:'center'});
-  doc.save('كشف-حساب-'+e.name+'-'+todayISO()+'.pdf');
-}
 function exportPDF(){if(activeAccId)doExportPDF(activeAccId,activeAccType);}
 
 function doSendWhatsApp(id,type){
@@ -3041,14 +2963,6 @@ function doSendWhatsApp(id,type){
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 function sendWhatsApp(){if(activeAccId)doSendWhatsApp(activeAccId,activeAccType);}
-
-function deleteRow(arr,id,page){
-  const idx=arr.findIndex(x=>x.id===id);
-  if(idx<0)return;
-  if(!confirm('حذف هذا السجل؟'))return;
-  arr.splice(idx,1); renderPage(page);
-  saveDB();
-}
 
 function printInvoice(id){
   // جلب بيانات البيع الكاملة (مع قائمة الأصناف)
@@ -4331,12 +4245,6 @@ function isManager(){
   return role==='مدير'||role==='admin'||role==='manager'||currentUser.username==='admin';
 }
 
-function isManager(){
-  if(!currentUser) return false;
-  var dbUser=(DB.users||[]).find(function(u){return u.login===currentUser.username;});
-  var role=dbUser?dbUser.role:(currentUser.role||'');
-  return role==='مدير'||role==='admin'||role==='manager'||currentUser.username==='admin';
-}
 function canAccess(page){
   if(!currentUser) return false;
   const dbUser=(DB.users||[]).find(u=>u.login===currentUser.username);
@@ -5353,8 +5261,6 @@ function balLoadNextDay(){const nd=DB.config&&DB.config.balNextDay;if(!nd)return
 function balanceClearAllRecords(){if(!confirm('حذف جميع السجلات؟'))return;DB.balanceRecords=[];saveDB();balRenderRecords();toast('🗑 تم الحذف','red');}
 function balRenderRecords(){const el=document.getElementById('balRecordsTable');if(!el)return;const recs=DB.balanceRecords||[];if(!recs.length){el.innerHTML='<div class="empty-state">لا توجد سجلات</div>';return;}el.innerHTML=`<table><thead><tr><th>التاريخ</th><th>فارق رصيد×1.07</th><th>فارق سبافون×13</th><th>الشرائح</th><th>الأيام</th><th>الواصل</th><th>الديون</th><th>مصروفات</th><th>الإيرادات</th><th>الطرح</th><th>النتيجة</th><th>حذف</th></tr></thead><tbody>`+recs.map(r=>`<tr><td style="color:var(--muted);white-space:nowrap">${r.date}</td><td style="color:var(--accent)">${balFmt(r.balDiffTotal||0)} ${CUR}</td><td style="color:var(--purple)">${balFmt(r.sabTotalVal||0)} ${CUR}</td><td style="color:var(--yellow)">${balFmt(r.simTotal||0)} ${CUR}</td><td style="color:var(--green)">${balFmt(r.dailySales||0)} ${CUR}</td><td style="color:var(--green)">${balFmt(r.totalReceived||0)} ${CUR}</td><td style="color:var(--red)">${balFmt(r.totalDebts||0)} ${CUR}</td><td style="color:var(--yellow)">${balFmt(r.totalExpItems||0)} ${CUR}</td><td style="color:var(--green);font-weight:700">${balFmt(r.totalIncome||0)} ${CUR}</td><td style="color:var(--red);font-weight:700">${balFmt(r.totalExpense||0)} ${CUR}</td><td style="font-weight:900;color:${r.isProfit?'var(--green)':'var(--red)'}">${r.isProfit?'📈':'📉'} ${balFmt(Math.abs(r.result||0))} ${CUR}</td><td><button class="btn btn-red" onclick="balDeleteRecord(${r.id})" style="padding:3px 8px;font-size:11px">✕</button></td></tr>`).join('')+'</tbody></table>';}
 function balDeleteRecord(id){if(!confirm('حذف؟'))return;DB.balanceRecords=(DB.balanceRecords||[]).filter(r=>r.id!==id);saveDB();balRenderRecords();}
-function renderBalancePage(){balDebts=[];balReceived=[];balExpenses=[];balRenderDebts();balRenderReceived();balRenderExpenses();balLoadNextDay();balRenderRecords();balCalc();}
-
 // ════════════════════════════════════════════════════════
 // مخزون الرصيد
 // ════════════════════════════════════════════════════════
